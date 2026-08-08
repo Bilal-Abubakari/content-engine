@@ -12,6 +12,19 @@ body {
   margin: 0;
 }
 
+html {
+  /* Smooth-scroll to in-page anchors (nav links). scroll-padding-top offsets
+     the sticky navbar so targeted sections aren't hidden beneath it. */
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   @apply bg-slate-950 text-slate-100 antialiased;
   background-image:
