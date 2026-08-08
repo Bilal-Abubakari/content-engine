@@ -1,6 +1,5 @@
 import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { LinkedInIcon, XIcon } from '../icons/brand-icons';
 
 interface FooterLink {
   label: string;
@@ -19,29 +18,14 @@ const LINK_COLUMNS: { heading: string; links: FooterLink[] }[] = [
   },
   {
     heading: 'Company',
-    links: [
-      { label: 'About', href: '/#features' },
-      { label: 'Blog', href: '/#how-it-works' },
-      { label: 'Careers', href: '/#features' },
-      { label: 'Contact', href: 'mailto:hello@contentengine.app' },
-    ],
+    links: [{ label: 'Contact', href: 'mailto:hello@contentengine.app' }],
   },
   {
     heading: 'Legal',
     links: [
-      { label: 'Privacy', href: '/#faq' },
-      { label: 'Terms', href: '/#faq' },
-      { label: 'Security', href: '/#faq' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
     ],
-  },
-];
-
-const SOCIALS: { label: string; href: string; Icon: typeof XIcon }[] = [
-  { label: 'ContentEngine on X', href: 'https://x.com', Icon: XIcon },
-  {
-    label: 'ContentEngine on LinkedIn',
-    href: 'https://linkedin.com',
-    Icon: LinkedInIcon,
   },
 ];
 
@@ -63,20 +47,6 @@ export function Footer() {
               Turn one link or a rough draft into a week of platform-ready
               content — tweets, threads, LinkedIn posts, a newsletter, and more.
             </p>
-            <div className="mt-6 flex items-center gap-3">
-              {SOCIALS.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {LINK_COLUMNS.map((column) => (
@@ -100,12 +70,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 text-sm text-slate-500 sm:flex-row">
+        <div className="mt-12 border-t border-white/5 pt-8 text-sm text-slate-500">
           <p>© {year} ContentEngine. All rights reserved.</p>
-          <p className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            All systems operational
-          </p>
         </div>
       </div>
     </footer>

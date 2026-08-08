@@ -3,7 +3,7 @@
 import { Reveal } from './reveal';
 
 const STATS = [
-  { value: '4', label: 'Platforms per source' },
+  { value: '7', label: 'Formats per source' },
   { value: '10x', label: 'Faster than writing by hand' },
   { value: '30s', label: 'From paste to publish-ready' },
   { value: '5', label: 'Free repurposes / month' },

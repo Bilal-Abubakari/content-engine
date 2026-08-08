@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'ContentEngine — Turn one link into a week of content',
   description:
-    'AI-powered content repurposing. Paste a link or text and get tweets, LinkedIn posts, a newsletter, and threads in seconds.',
+    'AI-powered content repurposing. Paste a link or text and get tweets, LinkedIn and Facebook posts, a newsletter, a thread, plus Instagram and TikTok drafts in seconds.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

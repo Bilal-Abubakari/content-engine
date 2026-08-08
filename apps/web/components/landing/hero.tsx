@@ -56,8 +56,8 @@ export function Hero() {
           className="mt-6 max-w-2xl text-pretty text-lg text-slate-300 sm:text-xl"
         >
           Paste a URL or drop in raw text. ContentEngine instantly reshapes it
-          into tweets, a LinkedIn post, a newsletter, and a full thread — ready
-          to publish everywhere.
+          into tweets, LinkedIn and Facebook posts, a newsletter, a full thread,
+          plus Instagram and TikTok drafts — ready to copy and publish.
         </motion.p>
 
         <motion.div
@@ -75,7 +75,7 @@ export function Hero() {
         </motion.div>
 
         <motion.p variants={item} className="mt-6 text-sm text-slate-500">
-          No credit card required · 4 platforms · Instant results
+          No credit card required · 7 formats · Instant results
         </motion.p>
       </motion.div>
     </section>

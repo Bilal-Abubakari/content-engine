@@ -14,12 +14,12 @@ const FAQS: QA[] = [
   {
     question: 'Is there really a free plan?',
     answer:
-      'Yes. The Free plan gives you 5 repurposes every month with access to all four output formats — no credit card required.',
+      'Yes. The Free plan gives you 5 repurposes every month with access to every output format — no credit card required.',
   },
   {
     question: 'What counts as one repurpose?',
     answer:
-      'Each source you submit (a URL or a block of text) counts as one repurpose, and returns tweets, a LinkedIn post, a newsletter draft, and a thread all at once.',
+      'Each source you submit (a URL or a block of text) counts as one repurpose, and returns tweets, LinkedIn and Facebook posts, a newsletter draft, a thread, plus Instagram and TikTok drafts — all at once.',
   },
   {
     question: 'Can I cancel anytime?',
@@ -29,7 +29,7 @@ const FAQS: QA[] = [
   {
     question: 'Which platforms do you support?',
     answer:
-      'Today we generate copy tuned for X (Twitter), LinkedIn, email newsletters, and threaded posts. More formats are on the way.',
+      'We generate copy tuned for X (Twitter), LinkedIn, Facebook, email newsletters, and threads, plus Instagram captions and TikTok scripts. You can publish directly to LinkedIn, X, and Facebook today; direct publishing to Instagram and TikTok is coming soon, so for now you copy those drafts and post them yourself.',
   },
   {
     question: 'Do you store my content?',
