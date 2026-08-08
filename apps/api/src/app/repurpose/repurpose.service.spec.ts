@@ -1,12 +1,19 @@
 import { BadRequestException } from '@nestjs/common';
 import type { Platform } from '@org/shared';
+import { MockLlmProvider } from './providers/mock-llm.provider';
 import { RepurposeService, type SourceType } from './repurpose.service';
+import type { SourceResolverService } from './source-resolver.service';
 
 describe('RepurposeService', () => {
   let service: RepurposeService;
 
+  // Passthrough resolver so unit tests never make a network request.
+  const resolver = {
+    resolve: async (source: string): Promise<string> => source,
+  } as unknown as SourceResolverService;
+
   beforeEach(() => {
-    service = new RepurposeService();
+    service = new RepurposeService(new MockLlmProvider(), resolver);
   });
 
   describe('detectSourceType', () => {

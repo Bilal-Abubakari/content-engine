@@ -24,6 +24,19 @@ const envSchema = z.object({
     .string()
     .min(1, 'DATABASE_URL is required (PostgreSQL connection string).'),
 
+  // --- AI generation ---------------------------------------------------------
+  // Which LLM backs the repurpose engine. Defaults to the built-in keyless
+  // mock so the app runs with no credentials; set to a real provider (and its
+  // key below) to generate live content. LLM_MODEL overrides the provider's
+  // default model id.
+  LLM_PROVIDER: z
+    .enum(['mock', 'anthropic', 'openai', 'gemini'])
+    .default('mock'),
+  LLM_MODEL: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  GOOGLE_API_KEY: z.string().optional(),
+
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
