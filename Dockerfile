@@ -62,6 +62,14 @@ WORKDIR /app
 COPY --from=builder /workspace/apps/api/dist/package.json ./package.json
 COPY --from=builder /workspace/apps/api/dist/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modules
+# pnpm >=9.15 refuses to run dependency lifecycle scripts unless the package is
+# in an `onlyBuiltDependencies` allowlist, aborting the install with
+# ERR_PNPM_IGNORED_BUILDS for @prisma/client's `prisma`/`@prisma/engines`
+# postinstall. The pruned package.json drops the workspace's pnpm config, so
+# re-add the allowlist here. pnpm does not persist this to the lockfile settings,
+# so `--frozen-lockfile` is unaffected. Scoped to this isolated install; the
+# builder stage (with esbuild/etc.) is untouched.
+RUN node -e "const f='./package.json',fs=require('fs');const p=JSON.parse(fs.readFileSync(f));p.pnpm={...(p.pnpm||{}),onlyBuiltDependencies:['prisma','@prisma/engines','@prisma/client']};fs.writeFileSync(f,JSON.stringify(p,null,2));"
 # `--package-import-method copy` makes node_modules self-contained: files are
 # copied out of the (cache-mounted, ephemeral) store rather than hardlinked, so
 # the shipped image has no dangling links into a store that isn't in the layer.
