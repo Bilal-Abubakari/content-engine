@@ -267,6 +267,9 @@ importers:
       '@org/shared':
         specifier: workspace:*
         version: link:../../libs/shared
+      '@prisma/adapter-pg':
+        specifier: ^7.9.1
+        version: 7.9.1
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
@@ -276,6 +279,9 @@ importers:
       jose:
         specifier: ^6.2.7
         version: 6.2.7
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
