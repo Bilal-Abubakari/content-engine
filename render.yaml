@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+#
+# Render blueprint for the ContentEngine API. Postgres is hosted on Neon (not
+# Render), so there is no `databases:` block — DATABASE_URL is a dashboard secret.
+# The web app (apps/web) is NOT deployed here — it ships to Vercel, which builds
+# Next.js natively (see vercel.json). This blueprint only owns the backend.
+#
+# Render builds the Dockerfile's FINAL stage (no `target` field exists), which is
+# the `api` stage. The pre-deploy hook applies Prisma migrations before the new
+# instance starts taking traffic.
+
+services:
+  - type: web
+    name: contentengine-api
+    runtime: docker
+    plan: starter
+    region: oregon # match your Neon region (us-east-2) as closely as Render allows
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health/live
+    # Apply committed migrations after the image builds, before the new instance
+    # is promoted. `migrate deploy` only runs SQL (no client generation), so the
+    # pinned CLI is fetched on demand; prisma.config.ts + schema + migrations were
+    # copied into the image by the Dockerfile's `api` stage. This reads
+    # DATABASE_URL, which MUST be Neon's DIRECT (unpooled) URL — the pooled
+    # endpoint is PgBouncer transaction-mode and cannot hold migration locks.
+    preDeployCommand: pnpm dlx prisma@7.9.1 migrate deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Neon DIRECT (unpooled) connection string — set in the dashboard. A
+      # long-running server holds a persistent pool via the pg driver adapter, so
+      # the direct endpoint is correct here (and required for migrations above).
+      - key: DATABASE_URL
+        sync: false
+      # --- Secrets: set in the Render dashboard (sync:false keeps them out of git) ---
+      - key: AUTH_SECRET
+        sync: false
+      - key: SOCIAL_TOKEN_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      # --- AI provider selection ---
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-2.5-flash
+      # --- CORS: the Vercel web origin allowed to call this API ---
+      - key: WEB_ORIGIN
+        sync: false # e.g. https://contentengine.vercel.app

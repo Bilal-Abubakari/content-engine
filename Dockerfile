@@ -31,27 +31,8 @@ RUN pnpm nx prune @org/api
 RUN pnpm nx build @org/web
 
 # ---------------------------------------------------------------------------
-# API runner: install only the pruned production deps + the bundled server.
-# ---------------------------------------------------------------------------
-FROM base AS api
-ENV NODE_ENV=production
-WORKDIR /app
-COPY --from=builder /workspace/apps/api/dist/package.json ./package.json
-COPY --from=builder /workspace/apps/api/dist/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modules
-# `--package-import-method copy` makes node_modules self-contained: files are
-# copied out of the (cache-mounted, ephemeral) store rather than hardlinked, so
-# the shipped image has no dangling links into a store that isn't in the layer.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile --package-import-method copy
-COPY --from=builder /workspace/apps/api/dist/main.js ./main.js
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "main.js"]
-
-# ---------------------------------------------------------------------------
 # Web runner: Next.js standalone server (self-contained node_modules traced in).
+# Selected in docker-compose via `target: web`.
 # ---------------------------------------------------------------------------
 FROM base AS web
 ENV NODE_ENV=production
@@ -66,3 +47,37 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "apps/web/server.js"]
+
+# ---------------------------------------------------------------------------
+# API runner: install only the pruned production deps + the bundled server.
+# NOTE: this is intentionally the LAST stage so `docker build` (with no
+# --target) produces the API image. Render blueprints have no target field and
+# always build the final stage, so the platform we deploy the API to gets this.
+# docker-compose still selects each stage explicitly via `target:`, so the web
+# stage above is unaffected by the ordering.
+# ---------------------------------------------------------------------------
+FROM base AS api
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=builder /workspace/apps/api/dist/package.json ./package.json
+COPY --from=builder /workspace/apps/api/dist/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modules
+# `--package-import-method copy` makes node_modules self-contained: files are
+# copied out of the (cache-mounted, ephemeral) store rather than hardlinked, so
+# the shipped image has no dangling links into a store that isn't in the layer.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --prod --frozen-lockfile --package-import-method copy
+COPY --from=builder /workspace/apps/api/dist/main.js ./main.js
+# Ship the Prisma migration config + schema + history so the platform's
+# pre-deploy hook can run `prisma migrate deploy` against the managed database.
+# `prisma.config.ts` uses paths relative to the workspace root and reads the URL
+# from DATABASE_URL, so the schema/migrations must keep their `libs/database/...`
+# layout. `migrate deploy` only applies committed SQL (no client generation), so
+# the pinned Prisma CLI is fetched on demand via pnpm rather than bloating the
+# lean runtime image.
+COPY --from=builder /workspace/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /workspace/libs/database/prisma ./libs/database/prisma
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "main.js"]
