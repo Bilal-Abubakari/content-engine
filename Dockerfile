@@ -76,8 +76,8 @@ COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modul
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --prod --frozen-lockfile --package-import-method copy
 COPY --from=builder /workspace/apps/api/dist/main.js ./main.js
-# Ship the Prisma migration config + schema + history so the platform's
-# pre-deploy hook can run `prisma migrate deploy` against the managed database.
+# Ship the Prisma migration config + schema + history so the entrypoint can run
+# `prisma migrate deploy` against the managed database at container start.
 # `prisma.config.ts` uses paths relative to the workspace root and reads the URL
 # from DATABASE_URL, so the schema/migrations must keep their `libs/database/...`
 # layout. `migrate deploy` only applies committed SQL (no client generation), so
@@ -85,7 +85,10 @@ COPY --from=builder /workspace/apps/api/dist/main.js ./main.js
 # lean runtime image.
 COPY --from=builder /workspace/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /workspace/libs/database/prisma ./libs/database/prisma
+# The entrypoint applies pending migrations, then execs the server. We deploy
+# this image directly (no platform pre-deploy hook), so migrations must run here.
+COPY --from=builder /workspace/docker-entrypoint.sh ./docker-entrypoint.sh
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "main.js"]
+CMD ["sh", "docker-entrypoint.sh"]
