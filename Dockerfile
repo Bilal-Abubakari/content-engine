@@ -6,7 +6,11 @@
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+# Activate the pinned pnpm globally so EVERY stage uses it. The pruned
+# apps/api/dist/package.json carries no `packageManager` field, so without this
+# corepack would fall back to its bundled default (pnpm 10) in the api stage —
+# which makes ignored dependency build scripts a FATAL error, unlike 9.15.9.
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 WORKDIR /workspace
 
 # ---------------------------------------------------------------------------
@@ -62,14 +66,10 @@ WORKDIR /app
 COPY --from=builder /workspace/apps/api/dist/package.json ./package.json
 COPY --from=builder /workspace/apps/api/dist/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modules
-# pnpm >=9.15 refuses to run dependency lifecycle scripts unless the package is
-# in an `onlyBuiltDependencies` allowlist, aborting the install with
-# ERR_PNPM_IGNORED_BUILDS for @prisma/client's `prisma`/`@prisma/engines`
-# postinstall. The pruned package.json drops the workspace's pnpm config, so
-# re-add the allowlist here. pnpm does not persist this to the lockfile settings,
-# so `--frozen-lockfile` is unaffected. Scoped to this isolated install; the
-# builder stage (with esbuild/etc.) is untouched.
-RUN node -e "const f='./package.json',fs=require('fs');const p=JSON.parse(fs.readFileSync(f));p.pnpm={...(p.pnpm||{}),onlyBuiltDependencies:['prisma','@prisma/engines','@prisma/client']};fs.writeFileSync(f,JSON.stringify(p,null,2));"
+# Prisma's postinstall (prisma/@prisma/engines) isn't allowlisted, so pnpm skips
+# it — harmless here since the runtime uses the driver adapter, not the native
+# engine. Under the pinned pnpm 9.15.9 (see the base stage) this is a warning
+# rather than the fatal ERR_PNPM_IGNORED_BUILDS that pnpm 10 would raise.
 # `--package-import-method copy` makes node_modules self-contained: files are
 # copied out of the (cache-mounted, ephemeral) store rather than hardlinked, so
 # the shipped image has no dangling links into a store that isn't in the layer.
