@@ -1,0 +1,40 @@
+{
+  "name": "@org/database",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "targets": {
+      "test": {
+        "options": {
+          "passWithNoTests": true
+        }
+      }
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@org/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "@org/source": "./src/generated/prisma/client.ts",
+      "types": "./dist/generated/prisma/client.d.ts",
+      "import": "./dist/generated/prisma/client.js",
+      "default": "./dist/generated/prisma/client.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "pg": "^8.22.0",
+    "tslib": "^2.3.0"
+  }
+}

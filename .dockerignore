@@ -1,0 +1,34 @@
+# Keep the build context small and avoid leaking host artifacts/secrets into
+# the image. Everything the build needs is source; node_modules and build
+# outputs are regenerated inside the builder stage.
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+.nx
+tmp
+coverage
+
+# Local env files — never bake secrets into an image.
+.env
+.env.*
+**/.env
+**/.env.*
+
+# VCS / editor / tooling noise
+.git
+.github
+.vscode
+.idea
+.agents
+.claude
+.codex
+.cursor
+.gemini
+.opencode
+*.log
+Dockerfile
+.dockerignore
+docker-compose.yml

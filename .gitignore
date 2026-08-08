@@ -8,6 +8,14 @@ out-tsc
 # dependencies
 node_modules
 
+# environment / secrets (keep the committed examples)
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
 # IDEs and editors
 /.idea
 .project
@@ -34,6 +42,10 @@ yarn-error.log
 testem.log
 /typings
 
+# JVM crash / replay logs
+replay_pid*.log
+hs_err_pid*.log
+
 # System Files
 .DS_Store
 Thumbs.db
@@ -48,3 +60,8 @@ Thumbs.db
 .nx/polygraph
 .nx/self-healing
 .nx/migrate-runs
+
+# Next.js
+.next
+out
+test-output

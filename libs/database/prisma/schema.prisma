@@ -1,0 +1,192 @@
+// ContentEngine data model.
+//
+// Auth models (User/Account/Session/VerificationToken) match the shape the
+// @next-auth/prisma-adapter expects. Billing (Subscription) and quota
+// (UsageRecord) are ContentEngine-specific and are driven by the plan config
+// in @org/shared.
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  name              String?
+  email             String?            @unique
+  emailVerified     DateTime?
+  image             String?
+  accounts          Account[]
+  sessions          Session[]
+  subscription      Subscription?
+  usageRecords      UsageRecord[]
+  socialConnections SocialConnection[]
+  socialPosts       SocialPost[]
+  repurposeJobs     RepurposeJob[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  canceled
+  incomplete
+  incomplete_expired
+  unpaid
+}
+
+/// One row per user. `plan` holds a PlanId ("free" | "pro" | "team") from
+/// @org/shared; it is kept as a string so the plan catalogue can evolve
+/// without a schema migration.
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  plan                 String             @default("free")
+  status               SubscriptionStatus @default(active)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Monthly generation counter, one row per user per period ("YYYY-MM").
+/// The unique constraint lets the API upsert-and-increment atomically.
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  period    String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period])
+}
+
+/// One saved repurpose generation, so users can revisit past results. `source`
+/// is the raw input (URL or pasted text); `content` is the full
+/// RepurposedContent payload from @org/shared, stored as JSON so the shape can
+/// evolve without a migration.
+model RepurposeJob {
+  id         String   @id @default(cuid())
+  userId     String
+  source     String   @db.Text
+  sourceType String
+  content    Json
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+/// A user's linked social account for one platform. `platform` holds a
+/// SocialPlatform value ("linkedin" | "x" | "facebook" | "instagram" |
+/// "tiktok") from @org/shared; kept as a string so the catalogue can grow
+/// without a migration. OAuth tokens are stored encrypted (AES-256-GCM) — the
+/// database never holds a plaintext access/refresh token.
+model SocialConnection {
+  id                String    @id @default(cuid())
+  userId            String
+  platform          String
+  externalAccountId String
+  displayName       String?
+  accessToken       String    @db.Text
+  refreshToken      String?   @db.Text
+  scope             String?
+  expiresAt         DateTime?
+  /// Platform-specific extras (e.g. a Facebook Page token, an Instagram
+  /// business account id) stored as encrypted JSON string values by the caller.
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts SocialPost[]
+
+  @@unique([userId, platform, externalAccountId])
+  @@index([userId])
+}
+
+enum PublishStatus {
+  draft
+  scheduled
+  publishing
+  published
+  failed
+}
+
+/// A single piece of content queued for or delivered to a social platform.
+/// `scheduledFor` in the future means the poller publishes it later; null means
+/// publish immediately. `externalPostId` is the id returned by the platform on
+/// success; `error` captures the failure reason otherwise.
+model SocialPost {
+  id             String        @id @default(cuid())
+  userId         String
+  connectionId   String
+  platform       String
+  content        String        @db.Text
+  mediaUrls      String[]
+  status         PublishStatus @default(draft)
+  scheduledFor   DateTime?
+  publishedAt    DateTime?
+  externalPostId String?
+  error          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection SocialConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status, scheduledFor])
+}
