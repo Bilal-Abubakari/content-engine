@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { BillingModule } from './billing/billing.module';
 import { HealthModule } from './health/health.module';
 import { RepurposeModule } from './repurpose/repurpose.module';
+import { SettingsModule } from './settings/settings.module';
 import { SocialModule } from './social/social.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { SocialModule } from './social/social.module';
     RepurposeModule,
     BillingModule,
     SocialModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,17 +10,24 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import type {
-  RepurposeHistoryItem,
-  RepurposeResponse,
-  UsageSummary,
+import {
+  isContentTone,
+  isGenerationFormat,
+  type ContentTone,
+  type GenerationFormat,
+  type RepurposeHistoryItem,
+  type RepurposeResponse,
+  type UsageSummary,
+  type UserSettings,
 } from '@org/shared';
 import {
   AuthGuard,
   type AuthenticatedRequest,
 } from '../auth/auth.guard';
+import { SettingsService } from '../settings/settings.service';
 import { UsageService } from '../usage/usage.service';
 import { RepurposeRequestDto } from './dto/repurpose-request.dto';
+import type { GenerationOptions } from './providers/llm-provider';
 import { RepurposeHistoryService } from './repurpose-history.service';
 import { RepurposeService } from './repurpose.service';
 
@@ -30,6 +38,7 @@ export class RepurposeController {
     private readonly repurposeService: RepurposeService,
     private readonly usage: UsageService,
     private readonly historyService: RepurposeHistoryService,
+    private readonly settings: SettingsService,
   ) {}
 
   /**
@@ -49,10 +58,68 @@ export class RepurposeController {
     await this.usage.assertWithinLimit(userId);
     const source = this.repurposeService.validateSource(body.source);
     const sourceType = this.repurposeService.detectSourceType(source);
-    const result = await this.repurposeService.repurpose(source);
+    const settings = await this.settings.get(userId);
+    const options = this.resolveOptions(settings, body);
+    const result = await this.repurposeService.repurpose(source, options);
     await this.usage.increment(userId);
     await this.historyService.record(userId, source, sourceType, result.content);
     return result;
+  }
+
+  /**
+   * Merge the user's saved settings with any per-run overrides in the request
+   * body to produce the resolved {@link GenerationOptions} used for this run.
+   * Overrides are validated here (no global ValidationPipe in this codebase);
+   * everything else falls back to the saved settings.
+   */
+  private resolveOptions(
+    settings: UserSettings,
+    body: RepurposeRequestDto,
+  ): GenerationOptions {
+    return {
+      formats: this.resolveFormats(settings.formats, body.formats),
+      tone: this.resolveTone(settings.tone, body.tone),
+      customTone: settings.customTone,
+      audience: settings.audience,
+      guidance: settings.guidance,
+      emojis: settings.emojis,
+      hashtags: settings.hashtags,
+      language: settings.language,
+    };
+  }
+
+  /** Validate + dedupe an optional per-run format override, else use settings. */
+  private resolveFormats(
+    saved: GenerationFormat[],
+    override: readonly string[] | undefined,
+  ): GenerationFormat[] {
+    if (override === undefined) {
+      return saved;
+    }
+    if (!Array.isArray(override) || override.length === 0) {
+      throw new BadRequestException('Select at least one format to generate.');
+    }
+    const formats = [...new Set(override)];
+    for (const format of formats) {
+      if (!isGenerationFormat(format)) {
+        throw new BadRequestException(`Invalid format: ${String(format)}`);
+      }
+    }
+    return formats as GenerationFormat[];
+  }
+
+  /** Validate an optional per-run tone override, else use settings. */
+  private resolveTone(
+    saved: ContentTone,
+    override: string | undefined,
+  ): ContentTone {
+    if (override === undefined) {
+      return saved;
+    }
+    if (!isContentTone(override)) {
+      throw new BadRequestException(`Invalid tone: ${String(override)}`);
+    }
+    return override;
   }
 
   /**

@@ -1,8 +1,33 @@
 import { BadRequestException } from '@nestjs/common';
-import type { Platform } from '@org/shared';
+import type { GenerationFormat, Platform } from '@org/shared';
+import type { GenerationOptions } from './providers/llm-provider';
 import { MockLlmProvider } from './providers/mock-llm.provider';
 import { RepurposeService, type SourceType } from './repurpose.service';
 import type { SourceResolverService } from './source-resolver.service';
+
+/** A fully-populated options object; tests override `formats`. */
+function options(formats: GenerationFormat[]): GenerationOptions {
+  return {
+    formats,
+    tone: 'professional',
+    customTone: null,
+    audience: null,
+    guidance: null,
+    emojis: true,
+    hashtags: true,
+    language: 'English',
+  };
+}
+
+const ALL_FORMATS: Platform[] = [
+  'tweets',
+  'linkedIn',
+  'newsletter',
+  'threads',
+  'facebook',
+  'instagram',
+  'tiktok',
+];
 
 describe('RepurposeService', () => {
   let service: RepurposeService;
@@ -56,33 +81,38 @@ describe('RepurposeService', () => {
     ])(
       'returns fully-populated content for a $kind source',
       async ({ source }) => {
-        const platforms: Platform[] = [
-          'tweets',
-          'linkedIn',
-          'newsletter',
-          'threads',
-          'facebook',
-          'instagram',
-          'tiktok',
-        ];
-        const { content, generatedAt } = await service.repurpose(source);
+        const { content, generatedAt } = await service.repurpose(
+          source,
+          options(ALL_FORMATS),
+        );
 
-        for (const platform of platforms) {
+        for (const platform of ALL_FORMATS) {
           expect(content[platform]).toBeDefined();
         }
-        expect(content.tweets.length).toBeGreaterThan(0);
-        expect(content.threads.length).toBeGreaterThan(0);
+        expect(content.tweets?.length).toBeGreaterThan(0);
+        expect(content.threads?.length).toBeGreaterThan(0);
         expect(typeof content.linkedIn).toBe('string');
         expect(typeof content.newsletter).toBe('string');
-        expect(content.facebook.length).toBeGreaterThan(0);
-        expect(content.instagram.length).toBeGreaterThan(0);
-        expect(content.tiktok.length).toBeGreaterThan(0);
+        expect(content.facebook?.length).toBeGreaterThan(0);
+        expect(content.instagram?.length).toBeGreaterThan(0);
+        expect(content.tiktok?.length).toBeGreaterThan(0);
         expect(() => new Date(generatedAt).toISOString()).not.toThrow();
       },
     );
 
+    it.each<{ label: string; formats: GenerationFormat[] }>([
+      { label: 'a single format', formats: ['linkedIn'] },
+      { label: 'a mixed subset', formats: ['tweets', 'newsletter'] },
+    ])(
+      'returns only the requested formats: $label',
+      async ({ formats }) => {
+        const { content } = await service.repurpose('some notes', options(formats));
+        expect(Object.keys(content).sort()).toEqual([...formats].sort());
+      },
+    );
+
     it('rejects an empty source with BadRequestException', async () => {
-      await expect(service.repurpose('   ')).rejects.toThrow(
+      await expect(service.repurpose('   ', options(ALL_FORMATS))).rejects.toThrow(
         BadRequestException,
       );
     });

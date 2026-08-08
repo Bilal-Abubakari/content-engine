@@ -190,16 +190,46 @@ function PlatformPreview({
 }) {
   switch (platform) {
     case 'x':
-      return <XPreview tweets={content.tweets} persona={persona} />;
+      return content.tweets ? (
+        <XPreview tweets={content.tweets} persona={persona} />
+      ) : (
+        <NotGenerated />
+      );
     case 'linkedin':
-      return <LinkedInPreview text={content.linkedIn} persona={persona} />;
+      return content.linkedIn ? (
+        <LinkedInPreview text={content.linkedIn} persona={persona} />
+      ) : (
+        <NotGenerated />
+      );
     case 'facebook':
-      return <FacebookPreview text={content.facebook} persona={persona} />;
+      return content.facebook ? (
+        <FacebookPreview text={content.facebook} persona={persona} />
+      ) : (
+        <NotGenerated />
+      );
     case 'instagram':
-      return <InstagramPreview caption={content.instagram} persona={persona} />;
+      return content.instagram ? (
+        <InstagramPreview caption={content.instagram} persona={persona} />
+      ) : (
+        <NotGenerated />
+      );
     case 'tiktok':
-      return <TikTokPreview script={content.tiktok} persona={persona} />;
+      return content.tiktok ? (
+        <TikTokPreview script={content.tiktok} persona={persona} />
+      ) : (
+        <NotGenerated />
+      );
   }
+}
+
+/** Shown when the selected platform's format wasn't part of this generation. */
+function NotGenerated() {
+  return (
+    <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
+      This format wasn&apos;t generated for this run. Enable it in your settings
+      or the generate form to include it next time.
+    </div>
+  );
 }
 
 function Avatar({

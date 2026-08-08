@@ -47,6 +47,16 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model UserSettings
+ * A user's content-generation preferences, captured at onboarding and editable
+ * later. `tone` holds a ContentTone id and `formats` holds GenerationFormat ids
+ * (keys of RepurposedContent) from @org/shared; both are strings so the
+ * catalogues can evolve without a migration. `onboardedAt` is null until the
+ * user completes first-run setup — the web app redirects to onboarding while it
+ * is null. One row per user, created lazily on first save.
+ */
+export type UserSettings = Prisma.UserSettingsModel
+/**
  * Model Account
  * 
  */

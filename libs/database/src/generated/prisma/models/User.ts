@@ -205,6 +205,7 @@ export type UserWhereInput = {
   socialConnections?: Prisma.SocialConnectionListRelationFilter
   socialPosts?: Prisma.SocialPostListRelationFilter
   repurposeJobs?: Prisma.RepurposeJobListRelationFilter
+  settings?: Prisma.XOR<Prisma.UserSettingsNullableScalarRelationFilter, Prisma.UserSettingsWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -222,6 +223,7 @@ export type UserOrderByWithRelationInput = {
   socialConnections?: Prisma.SocialConnectionOrderByRelationAggregateInput
   socialPosts?: Prisma.SocialPostOrderByRelationAggregateInput
   repurposeJobs?: Prisma.RepurposeJobOrderByRelationAggregateInput
+  settings?: Prisma.UserSettingsOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -242,6 +244,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   socialConnections?: Prisma.SocialConnectionListRelationFilter
   socialPosts?: Prisma.SocialPostListRelationFilter
   repurposeJobs?: Prisma.RepurposeJobListRelationFilter
+  settings?: Prisma.XOR<Prisma.UserSettingsNullableScalarRelationFilter, Prisma.UserSettingsWhereInput> | null
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -285,6 +288,7 @@ export type UserCreateInput = {
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -302,6 +306,7 @@ export type UserUncheckedCreateInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -319,6 +324,7 @@ export type UserUpdateInput = {
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -336,6 +342,7 @@ export type UserUncheckedUpdateInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -417,6 +424,20 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutSettingsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSettingsInput, Prisma.UserUncheckedCreateWithoutSettingsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSettingsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSettingsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSettingsInput, Prisma.UserUncheckedCreateWithoutSettingsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSettingsInput
+  upsert?: Prisma.UserUpsertWithoutSettingsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSettingsInput, Prisma.UserUpdateWithoutSettingsInput>, Prisma.UserUncheckedUpdateWithoutSettingsInput>
 }
 
 export type UserCreateNestedOneWithoutAccountsInput = {
@@ -517,6 +538,90 @@ export type UserUpdateOneRequiredWithoutSocialPostsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSocialPostsInput, Prisma.UserUpdateWithoutSocialPostsInput>, Prisma.UserUncheckedUpdateWithoutSocialPostsInput>
 }
 
+export type UserCreateWithoutSettingsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  usageRecords?: Prisma.UsageRecordCreateNestedManyWithoutUserInput
+  socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
+  socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
+  repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSettingsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  usageRecords?: Prisma.UsageRecordUncheckedCreateNestedManyWithoutUserInput
+  socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
+  socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
+  repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSettingsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSettingsInput, Prisma.UserUncheckedCreateWithoutSettingsInput>
+}
+
+export type UserUpsertWithoutSettingsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSettingsInput, Prisma.UserUncheckedUpdateWithoutSettingsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSettingsInput, Prisma.UserUncheckedCreateWithoutSettingsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSettingsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSettingsInput, Prisma.UserUncheckedUpdateWithoutSettingsInput>
+}
+
+export type UserUpdateWithoutSettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  usageRecords?: Prisma.UsageRecordUpdateManyWithoutUserNestedInput
+  socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
+  socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
+  repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  usageRecords?: Prisma.UsageRecordUncheckedUpdateManyWithoutUserNestedInput
+  socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
+  socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
+  repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutAccountsInput = {
   id?: string
   name?: string | null
@@ -531,6 +636,7 @@ export type UserCreateWithoutAccountsInput = {
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -547,6 +653,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -579,6 +686,7 @@ export type UserUpdateWithoutAccountsInput = {
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -595,6 +703,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -611,6 +720,7 @@ export type UserCreateWithoutSessionsInput = {
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -627,6 +737,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -659,6 +770,7 @@ export type UserUpdateWithoutSessionsInput = {
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -675,6 +787,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSubscriptionInput = {
@@ -691,6 +804,7 @@ export type UserCreateWithoutSubscriptionInput = {
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSubscriptionInput = {
@@ -707,6 +821,7 @@ export type UserUncheckedCreateWithoutSubscriptionInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSubscriptionInput = {
@@ -739,6 +854,7 @@ export type UserUpdateWithoutSubscriptionInput = {
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubscriptionInput = {
@@ -755,6 +871,7 @@ export type UserUncheckedUpdateWithoutSubscriptionInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUsageRecordsInput = {
@@ -771,6 +888,7 @@ export type UserCreateWithoutUsageRecordsInput = {
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUsageRecordsInput = {
@@ -787,6 +905,7 @@ export type UserUncheckedCreateWithoutUsageRecordsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUsageRecordsInput = {
@@ -819,6 +938,7 @@ export type UserUpdateWithoutUsageRecordsInput = {
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUsageRecordsInput = {
@@ -835,6 +955,7 @@ export type UserUncheckedUpdateWithoutUsageRecordsInput = {
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRepurposeJobsInput = {
@@ -851,6 +972,7 @@ export type UserCreateWithoutRepurposeJobsInput = {
   usageRecords?: Prisma.UsageRecordCreateNestedManyWithoutUserInput
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRepurposeJobsInput = {
@@ -867,6 +989,7 @@ export type UserUncheckedCreateWithoutRepurposeJobsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedCreateNestedManyWithoutUserInput
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRepurposeJobsInput = {
@@ -899,6 +1022,7 @@ export type UserUpdateWithoutRepurposeJobsInput = {
   usageRecords?: Prisma.UsageRecordUpdateManyWithoutUserNestedInput
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRepurposeJobsInput = {
@@ -915,6 +1039,7 @@ export type UserUncheckedUpdateWithoutRepurposeJobsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedUpdateManyWithoutUserNestedInput
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSocialConnectionsInput = {
@@ -931,6 +1056,7 @@ export type UserCreateWithoutSocialConnectionsInput = {
   usageRecords?: Prisma.UsageRecordCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSocialConnectionsInput = {
@@ -947,6 +1073,7 @@ export type UserUncheckedCreateWithoutSocialConnectionsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedCreateNestedManyWithoutUserInput
   socialPosts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSocialConnectionsInput = {
@@ -979,6 +1106,7 @@ export type UserUpdateWithoutSocialConnectionsInput = {
   usageRecords?: Prisma.UsageRecordUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSocialConnectionsInput = {
@@ -995,6 +1123,7 @@ export type UserUncheckedUpdateWithoutSocialConnectionsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedUpdateManyWithoutUserNestedInput
   socialPosts?: Prisma.SocialPostUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSocialPostsInput = {
@@ -1011,6 +1140,7 @@ export type UserCreateWithoutSocialPostsInput = {
   usageRecords?: Prisma.UsageRecordCreateNestedManyWithoutUserInput
   socialConnections?: Prisma.SocialConnectionCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSocialPostsInput = {
@@ -1027,6 +1157,7 @@ export type UserUncheckedCreateWithoutSocialPostsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedCreateNestedManyWithoutUserInput
   socialConnections?: Prisma.SocialConnectionUncheckedCreateNestedManyWithoutUserInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSocialPostsInput = {
@@ -1059,6 +1190,7 @@ export type UserUpdateWithoutSocialPostsInput = {
   usageRecords?: Prisma.UsageRecordUpdateManyWithoutUserNestedInput
   socialConnections?: Prisma.SocialConnectionUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSocialPostsInput = {
@@ -1075,6 +1207,7 @@ export type UserUncheckedUpdateWithoutSocialPostsInput = {
   usageRecords?: Prisma.UsageRecordUncheckedUpdateManyWithoutUserNestedInput
   socialConnections?: Prisma.SocialConnectionUncheckedUpdateManyWithoutUserNestedInput
   repurposeJobs?: Prisma.RepurposeJobUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
 }
 
 
@@ -1168,6 +1301,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   socialConnections?: boolean | Prisma.User$socialConnectionsArgs<ExtArgs>
   socialPosts?: boolean | Prisma.User$socialPostsArgs<ExtArgs>
   repurposeJobs?: boolean | Prisma.User$repurposeJobsArgs<ExtArgs>
+  settings?: boolean | Prisma.User$settingsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1210,6 +1344,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   socialConnections?: boolean | Prisma.User$socialConnectionsArgs<ExtArgs>
   socialPosts?: boolean | Prisma.User$socialPostsArgs<ExtArgs>
   repurposeJobs?: boolean | Prisma.User$repurposeJobsArgs<ExtArgs>
+  settings?: boolean | Prisma.User$settingsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1225,6 +1360,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     socialConnections: Prisma.$SocialConnectionPayload<ExtArgs>[]
     socialPosts: Prisma.$SocialPostPayload<ExtArgs>[]
     repurposeJobs: Prisma.$RepurposeJobPayload<ExtArgs>[]
+    settings: Prisma.$UserSettingsPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1635,6 +1771,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   socialConnections<T extends Prisma.User$socialConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$socialConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocialConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   socialPosts<T extends Prisma.User$socialPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$socialPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocialPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   repurposeJobs<T extends Prisma.User$repurposeJobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$repurposeJobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepurposeJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  settings<T extends Prisma.User$settingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$settingsArgs<ExtArgs>>): Prisma.Prisma__UserSettingsClient<runtime.Types.Result.GetResult<Prisma.$UserSettingsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2224,6 +2361,25 @@ export type User$repurposeJobsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.RepurposeJobScalarFieldEnum | Prisma.RepurposeJobScalarFieldEnum[]
+}
+
+/**
+ * User.settings
+ */
+export type User$settingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserSettings
+   */
+  select?: Prisma.UserSettingsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserSettings
+   */
+  omit?: Prisma.UserSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserSettingsInclude<ExtArgs> | null
+  where?: Prisma.UserSettingsWhereInput
 }
 
 /**

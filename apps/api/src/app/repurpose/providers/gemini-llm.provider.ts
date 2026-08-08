@@ -1,6 +1,10 @@
 import { GoogleGenAI, Type, type Schema } from '@google/genai';
-import type { RepurposedContent } from '@org/shared';
-import type { LlmGenerationRequest, LlmProvider } from './llm-provider';
+import { GENERATION_FORMAT_IDS, type GenerationFormat, type RepurposedContent } from '@org/shared';
+import type {
+  GenerationOptions,
+  LlmGenerationRequest,
+  LlmProvider,
+} from './llm-provider';
 
 /** Construction options for {@link GeminiLlmProvider}. */
 export interface GeminiProviderOptions {
@@ -19,40 +23,39 @@ const SYSTEM_INSTRUCTION =
   'is a short video script with hooks and beats. Keep each tweet under 280 ' +
   'characters. Return only the structured fields — no preamble.';
 
-/**
- * The JSON shape we force the model to return, matching {@link RepurposedContent}
- * exactly so the parsed payload satisfies the shared contract without guesswork.
- */
-const RESPONSE_SCHEMA: Schema = {
-  type: Type.OBJECT,
-  properties: {
-    tweets: { type: Type.ARRAY, items: { type: Type.STRING } },
-    linkedIn: { type: Type.STRING },
-    newsletter: { type: Type.STRING },
-    threads: { type: Type.ARRAY, items: { type: Type.STRING } },
-    facebook: { type: Type.STRING },
-    instagram: { type: Type.STRING },
-    tiktok: { type: Type.STRING },
-  },
-  required: [
-    'tweets',
-    'linkedIn',
-    'newsletter',
-    'threads',
-    'facebook',
-    'instagram',
-    'tiktok',
-  ],
-  propertyOrdering: [
-    'tweets',
-    'linkedIn',
-    'newsletter',
-    'threads',
-    'facebook',
-    'instagram',
-    'tiktok',
-  ],
+/** Whether a format is a list of posts or a single block of text. */
+const FORMAT_KIND: Record<GenerationFormat, 'array' | 'string'> = {
+  tweets: 'array',
+  linkedIn: 'string',
+  newsletter: 'string',
+  threads: 'array',
+  facebook: 'string',
+  instagram: 'string',
+  tiktok: 'string',
 };
+
+/**
+ * Build the response schema for exactly the requested formats. Only selected
+ * formats are included and marked required, so the model never spends tokens
+ * producing content the user didn't ask for. Ordering follows the canonical
+ * {@link GENERATION_FORMAT_IDS} for stable output.
+ */
+export function buildResponseSchema(formats: GenerationFormat[]): Schema {
+  const ordered = GENERATION_FORMAT_IDS.filter((id) => formats.includes(id));
+  const properties: Record<string, Schema> = {};
+  for (const format of ordered) {
+    properties[format] =
+      FORMAT_KIND[format] === 'array'
+        ? { type: Type.ARRAY, items: { type: Type.STRING } }
+        : { type: Type.STRING };
+  }
+  return {
+    type: Type.OBJECT,
+    properties,
+    required: [...ordered],
+    propertyOrdering: [...ordered],
+  };
+}
 
 /**
  * Google Gemini-backed provider. Uses structured output (`responseSchema`) so
@@ -69,13 +72,14 @@ export class GeminiLlmProvider implements LlmProvider {
   }
 
   async generate(request: LlmGenerationRequest): Promise<RepurposedContent> {
+    const { options } = request;
     const response = await this.client.models.generateContent({
       model: this.options.model,
       contents: this.buildPrompt(request),
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction: buildSystemInstruction(options),
         responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
+        responseSchema: buildResponseSchema(options.formats),
       },
     });
 
@@ -83,7 +87,7 @@ export class GeminiLlmProvider implements LlmProvider {
     if (!raw) {
       throw new Error('Gemini returned an empty response.');
     }
-    return parseRepurposedContent(raw);
+    return parseRepurposedContent(raw, options.formats);
   }
 
   /** Frame the source for the model. URL sources arrive as extracted article text. */
@@ -96,12 +100,60 @@ export class GeminiLlmProvider implements LlmProvider {
   }
 }
 
+/** Human-readable label for each tone, used in the system instruction. */
+const TONE_LABEL: Record<GenerationOptions['tone'], string> = {
+  professional: 'clear, credible, and polished',
+  casual: 'relaxed and conversational',
+  witty: 'playful with a light touch',
+  bold: 'punchy, confident, and opinionated',
+  inspirational: 'uplifting and motivating',
+  friendly: 'warm and approachable',
+};
+
 /**
- * Parse and validate a model's JSON string into {@link RepurposedContent}.
- * Kept pure and exported so the mapping/validation can be unit-tested without a
- * live API call. Throws a clear error if the payload is malformed.
+ * Compose the system instruction from the base role plus the user's resolved
+ * preferences (tone, custom note, audience, brand guidance, emoji/hashtag usage
+ * and output language) so a single prompt honours their settings.
  */
-export function parseRepurposedContent(raw: string): RepurposedContent {
+export function buildSystemInstruction(options: GenerationOptions): string {
+  const lines: string[] = [SYSTEM_INSTRUCTION];
+
+  lines.push(`Write in a ${TONE_LABEL[options.tone]} tone.`);
+  if (options.customTone) {
+    lines.push(`Additional tone guidance: ${options.customTone}`);
+  }
+  if (options.audience) {
+    lines.push(`Write for this audience: ${options.audience}.`);
+  }
+  if (options.guidance) {
+    lines.push(`Follow this brand/style guidance: ${options.guidance}`);
+  }
+  lines.push(
+    options.emojis
+      ? 'You may use emojis where they feel natural.'
+      : 'Do not use any emojis.',
+  );
+  lines.push(
+    options.hashtags
+      ? 'Include relevant hashtags where the platform expects them.'
+      : 'Do not include any hashtags.',
+  );
+  lines.push(`Write all content in ${options.language}.`);
+
+  return lines.join(' ');
+}
+
+/**
+ * Parse and validate a model's JSON string into {@link RepurposedContent},
+ * checking and returning only the requested {@link GenerationFormat}s. Kept pure
+ * and exported so the mapping/validation can be unit-tested without a live API
+ * call. Throws a clear error if the payload is malformed or missing a requested
+ * format.
+ */
+export function parseRepurposedContent(
+  raw: string,
+  formats: GenerationFormat[],
+): RepurposedContent {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -114,34 +166,22 @@ export function parseRepurposedContent(raw: string): RepurposedContent {
   }
 
   const record = parsed as Record<string, unknown>;
-  const stringFields = [
-    'linkedIn',
-    'newsletter',
-    'facebook',
-    'instagram',
-    'tiktok',
-  ] as const;
-  const arrayFields = ['tweets', 'threads'] as const;
+  const content: RepurposedContent = {};
 
-  for (const field of stringFields) {
-    if (typeof record[field] !== 'string') {
-      throw new Error(`Gemini response missing string field "${field}".`);
-    }
-  }
-  for (const field of arrayFields) {
-    const value = record[field];
-    if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
-      throw new Error(`Gemini response missing string[] field "${field}".`);
+  for (const format of formats) {
+    const value = record[format];
+    if (FORMAT_KIND[format] === 'array') {
+      if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
+        throw new Error(`Gemini response missing string[] field "${format}".`);
+      }
+      content[format] = value as never;
+    } else {
+      if (typeof value !== 'string') {
+        throw new Error(`Gemini response missing string field "${format}".`);
+      }
+      content[format] = value as never;
     }
   }
 
-  return {
-    tweets: record.tweets as string[],
-    linkedIn: record.linkedIn as string,
-    newsletter: record.newsletter as string,
-    threads: record.threads as string[],
-    facebook: record.facebook as string,
-    instagram: record.instagram as string,
-    tiktok: record.tiktok as string,
-  };
+  return content;
 }

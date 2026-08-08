@@ -1,6 +1,10 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import type { RepurposeResponse } from '@org/shared';
-import { LLM_PROVIDER, type LlmProvider } from './providers/llm-provider';
+import {
+  LLM_PROVIDER,
+  type GenerationOptions,
+  type LlmProvider,
+} from './providers/llm-provider';
 import { SourceResolverService } from './source-resolver.service';
 
 /** Whether the user supplied a link or pasted raw text. */
@@ -41,17 +45,26 @@ export class RepurposeService {
   }
 
   /**
-   * Repurpose a source into multi-platform content. Delegates generation to the
-   * injected {@link LlmProvider} (mock by default, a real model when configured)
-   * so the service stays agnostic to which vendor produced the content.
+   * Repurpose a source into content for the requested formats. Delegates
+   * generation to the injected {@link LlmProvider} (mock by default, a real model
+   * when configured) so the service stays agnostic to which vendor produced the
+   * content. The {@link GenerationOptions} carry the user's resolved settings and
+   * per-run overrides, including which formats to generate.
    */
-  async repurpose(rawSource: string): Promise<RepurposeResponse> {
+  async repurpose(
+    rawSource: string,
+    options: GenerationOptions,
+  ): Promise<RepurposeResponse> {
     const source = this.validateSource(rawSource);
     const sourceType = this.detectSourceType(source);
 
     // For URLs this fetches and extracts the article body; text passes through.
     const material = await this.sourceResolver.resolve(source, sourceType);
-    const content = await this.llm.generate({ source: material, sourceType });
+    const content = await this.llm.generate({
+      source: material,
+      sourceType,
+      options,
+    });
 
     return {
       content,

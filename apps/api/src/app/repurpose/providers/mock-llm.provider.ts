@@ -23,8 +23,21 @@ export class MockLlmProvider implements LlmProvider {
 
   private buildContent({
     sourceType,
+    options,
   }: LlmGenerationRequest): RepurposedContent {
     const origin = sourceType === 'url' ? 'the linked article' : 'your notes';
+    const all = this.allContent(origin);
+    // Honour the user's selection: only return the requested formats so the
+    // payload mirrors what a real provider (billed per format) would produce.
+    const selected: RepurposedContent = {};
+    for (const format of options.formats) {
+      selected[format] = all[format] as never;
+    }
+    return selected;
+  }
+
+  /** The full deterministic payload for every format, keyed by platform. */
+  private allContent(origin: string): Required<RepurposedContent> {
     return {
       tweets: [
         `🚀 Just distilled ${origin} into 5 key takeaways. Here's what actually matters 👇`,

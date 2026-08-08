@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SettingsModule } from '../settings/settings.module';
 import { UsageModule } from '../usage/usage.module';
 import { LLM_PROVIDER, type LlmProvider } from './providers/llm-provider';
 import { createLlmProvider } from './providers/llm-provider.factory';
@@ -8,7 +9,7 @@ import { RepurposeService } from './repurpose.service';
 import { SourceResolverService } from './source-resolver.service';
 
 @Module({
-  imports: [UsageModule],
+  imports: [UsageModule, SettingsModule],
   controllers: [RepurposeController],
   providers: [
     RepurposeService,

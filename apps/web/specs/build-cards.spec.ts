@@ -17,8 +17,34 @@ const sample: RepurposedContent = {
 describe('buildPlatformCards', () => {
   const cards = buildPlatformCards(sample);
 
-  it('produces exactly seven platform cards', () => {
+  it('produces exactly seven platform cards for a full payload', () => {
     expect(cards).toHaveLength(7);
+  });
+
+  it.each<{ label: string; content: RepurposedContent; titles: string[] }>([
+    {
+      label: 'only tweets',
+      content: { tweets: ['a'] },
+      titles: ['Tweets'],
+    },
+    {
+      label: 'only linkedIn',
+      content: { linkedIn: 'a post' },
+      titles: ['LinkedIn'],
+    },
+    {
+      label: 'a mixed subset',
+      content: { tweets: ['a'], newsletter: 'n', facebook: 'f' },
+      titles: ['Tweets', 'Facebook', 'Newsletter'],
+    },
+    {
+      label: 'nothing generated',
+      content: {},
+      titles: [],
+    },
+  ])('renders only present formats: $label', ({ content, titles }) => {
+    const result = buildPlatformCards(content);
+    expect(result.map((c) => c.title)).toEqual(titles);
   });
 
   it.each<{ title: string; kind: 'items' | 'text'; length?: number }>([
@@ -56,4 +82,17 @@ describe('platformContentText', () => {
   ])('returns the $platform payload', ({ platform, expected }) => {
     expect(platformContentText(sample, platform)).toBe(expected);
   });
+
+  it.each<{ platform: SocialPlatform }>([
+    { platform: 'x' },
+    { platform: 'linkedin' },
+    { platform: 'facebook' },
+    { platform: 'instagram' },
+    { platform: 'tiktok' },
+  ])(
+    'returns an empty string for $platform when the format is absent',
+    ({ platform }) => {
+      expect(platformContentText({}, platform)).toBe('');
+    },
+  );
 });
