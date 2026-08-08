@@ -52,10 +52,15 @@ export interface SocialProvider {
   /** Build the provider's OAuth authorize URL to redirect the browser to. */
   getAuthUrl(params: { state: string; redirectUri: string }): string;
 
-  /** Exchange the returned authorization code for tokens + account details. */
+  /**
+   * Exchange the returned authorization code for tokens + account details.
+   * `state` is the same signed value passed to {@link getAuthUrl}; providers
+   * that use PKCE (X) derive their code verifier from it.
+   */
   exchangeCode(params: {
     code: string;
     redirectUri: string;
+    state: string;
   }): Promise<ConnectedAccount>;
 
   /** Publish a post; throws with a human-readable reason on failure. */

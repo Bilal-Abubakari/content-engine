@@ -87,6 +87,7 @@ export class SocialService {
     const account = await provider.exchangeCode({
       code,
       redirectUri: this.redirectUri(platform),
+      state,
     });
 
     const data = {
