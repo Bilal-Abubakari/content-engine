@@ -20,6 +20,7 @@ export function buildPlatformCards(
   if (content.tweets) {
     cards.push({
       title: 'Tweets',
+      field: 'tweets',
       icon: XIcon,
       accent: 'from-sky-500 to-blue-500',
       items: content.tweets,
@@ -28,6 +29,7 @@ export function buildPlatformCards(
   if (content.linkedIn) {
     cards.push({
       title: 'LinkedIn',
+      field: 'linkedIn',
       icon: LinkedInIcon,
       accent: 'from-blue-600 to-indigo-600',
       text: content.linkedIn,
@@ -36,6 +38,7 @@ export function buildPlatformCards(
   if (content.facebook) {
     cards.push({
       title: 'Facebook',
+      field: 'facebook',
       icon: Users,
       accent: 'from-blue-500 to-blue-700',
       text: content.facebook,
@@ -44,6 +47,7 @@ export function buildPlatformCards(
   if (content.instagram) {
     cards.push({
       title: 'Instagram',
+      field: 'instagram',
       icon: Camera,
       accent: 'from-fuchsia-500 to-orange-500',
       text: content.instagram,
@@ -53,6 +57,7 @@ export function buildPlatformCards(
   if (content.tiktok) {
     cards.push({
       title: 'TikTok',
+      field: 'tiktok',
       icon: Music2,
       accent: 'from-slate-200 to-slate-400',
       text: content.tiktok,
@@ -62,6 +67,7 @@ export function buildPlatformCards(
   if (content.threads) {
     cards.push({
       title: 'Thread',
+      field: 'threads',
       icon: MessagesSquare,
       accent: 'from-fuchsia-500 to-purple-600',
       items: content.threads,
@@ -70,6 +76,7 @@ export function buildPlatformCards(
   if (content.newsletter) {
     cards.push({
       title: 'Newsletter',
+      field: 'newsletter',
       icon: Mail,
       accent: 'from-amber-500 to-orange-500',
       text: content.newsletter,

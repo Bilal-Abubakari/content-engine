@@ -27,14 +27,30 @@ interface BulkResult {
 }
 
 export function ResultsGrid({
-  content,
+  content: initialContent,
   userName = 'Your Name',
 }: {
   content: RepurposedContent;
   userName?: string;
 }) {
+  // Keep an editable copy so per-card tweaks flow into Preview and "Publish all"
+  // too. Resync when a different generation/history item is opened.
+  const [content, setContent] = useState<RepurposedContent>(initialContent);
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
+
   const cards = buildPlatformCards(content);
   const [connections, setConnections] = useState<SocialConnectionView[]>([]);
+
+  function handleEdit(
+    field: keyof RepurposedContent,
+    value: string | string[],
+  ) {
+    // `field` always matches the value kind (list fields get string[], text
+    // fields get string), so the cast documents that invariant for the compiler.
+    setContent((current) => ({ ...current, [field]: value }) as RepurposedContent);
+  }
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPlatform, setPreviewPlatform] = useState<SocialPlatform>('x');
   const [publishingAll, setPublishingAll] = useState(false);
@@ -200,7 +216,12 @@ export function ResultsGrid({
         className="columns-1 gap-6 md:columns-2 xl:columns-3"
       >
         {cards.map((card) => (
-          <ContentCard key={card.title} {...card} connections={connections} />
+          <ContentCard
+            key={card.title}
+            {...card}
+            connections={connections}
+            onSave={(value) => handleEdit(card.field, value)}
+          />
         ))}
       </motion.div>
 

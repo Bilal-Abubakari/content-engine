@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import type { RepurposeResponse } from '@org/shared';
+import { humanizeContent } from './humanize';
 import {
   LLM_PROVIDER,
   type GenerationOptions,
@@ -67,7 +68,9 @@ export class RepurposeService {
     });
 
     return {
-      content,
+      // Strip the em-dash-heavy punctuation that reads as machine-written before
+      // the content reaches the client or gets persisted to history.
+      content: humanizeContent(content),
       generatedAt: new Date().toISOString(),
     };
   }

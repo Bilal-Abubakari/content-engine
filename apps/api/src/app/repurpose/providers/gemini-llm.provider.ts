@@ -21,7 +21,9 @@ const SYSTEM_INSTRUCTION =
   'the newsletter is warm and personal, Threads is a numbered narrative, ' +
   'Facebook is conversational, Instagram is a caption with hashtags, and TikTok ' +
   'is a short video script with hooks and beats. Keep each tweet under 280 ' +
-  'characters. Return only the structured fields — no preamble.';
+  'characters. Write like a person, not an AI: avoid em dashes entirely and ' +
+  'use commas, periods, or shorter sentences instead. Return only the ' +
+  'structured fields, with no preamble.';
 
 /** Whether a format is a list of posts or a single block of text. */
 const FORMAT_KIND: Record<GenerationFormat, 'array' | 'string'> = {

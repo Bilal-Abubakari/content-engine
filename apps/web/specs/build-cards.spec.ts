@@ -47,17 +47,23 @@ describe('buildPlatformCards', () => {
     expect(result.map((c) => c.title)).toEqual(titles);
   });
 
-  it.each<{ title: string; kind: 'items' | 'text'; length?: number }>([
-    { title: 'Tweets', kind: 'items', length: 2 },
-    { title: 'LinkedIn', kind: 'text' },
-    { title: 'Facebook', kind: 'text' },
-    { title: 'Instagram', kind: 'text' },
-    { title: 'TikTok', kind: 'text' },
-    { title: 'Newsletter', kind: 'text' },
-    { title: 'Thread', kind: 'items', length: 3 },
-  ])('maps the $title card as $kind', ({ title, kind, length }) => {
+  it.each<{
+    title: string;
+    kind: 'items' | 'text';
+    field: keyof RepurposedContent;
+    length?: number;
+  }>([
+    { title: 'Tweets', kind: 'items', field: 'tweets', length: 2 },
+    { title: 'LinkedIn', kind: 'text', field: 'linkedIn' },
+    { title: 'Facebook', kind: 'text', field: 'facebook' },
+    { title: 'Instagram', kind: 'text', field: 'instagram' },
+    { title: 'TikTok', kind: 'text', field: 'tiktok' },
+    { title: 'Newsletter', kind: 'text', field: 'newsletter' },
+    { title: 'Thread', kind: 'items', field: 'threads', length: 3 },
+  ])('maps the $title card as $kind', ({ title, kind, field, length }) => {
     const card = cards.find((c) => c.title === title);
     expect(card).toBeDefined();
+    expect(card?.field).toBe(field);
     expect(card?.icon).toBeDefined();
     expect(card?.accent).toMatch(/^from-/);
 

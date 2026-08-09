@@ -2,6 +2,7 @@
 
 import {
   PLATFORM_CATALOGUE,
+  type RepurposedContent,
   type SocialConnectionView,
   type SocialPlatform,
 } from '@org/shared';
@@ -12,7 +13,10 @@ import {
   ExternalLink,
   Link2,
   Loader2,
+  Pencil,
+  Plus,
   Send,
+  Trash2,
   X as CloseIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
@@ -20,6 +24,8 @@ import { useState } from 'react';
 
 export interface ContentCardProps {
   title: string;
+  /** Which {@link RepurposedContent} field this card renders/edits. */
+  field: keyof RepurposedContent;
   /** A lucide icon or an inline brand glyph — anything rendering an SVG. */
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   /** Tailwind gradient classes for the icon chip, e.g. 'from-sky-500 to-blue-500'. */
@@ -32,6 +38,11 @@ export interface ContentCardProps {
   connections?: SocialConnectionView[];
   /** When set, the card shows a "Coming soon" badge and no publish action. */
   comingSoon?: boolean;
+  /**
+   * Commit an inline edit back to the parent. Receives a `string[]` for
+   * list-style cards (tweets/thread) and a `string` for single-text cards.
+   */
+  onSave?: (value: string | string[]) => void;
 }
 
 /** A banner shown after a publish attempt; carries the post link on success. */
@@ -50,14 +61,57 @@ export function ContentCard({
   items,
   connections = [],
   comingSoon = false,
+  onSave,
 }: ContentCardProps) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [publishing, setPublishing] = useState<SocialPlatform | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draftText, setDraftText] = useState('');
+  const [draftItems, setDraftItems] = useState<string[]>([]);
 
+  // List-style cards (tweets / thread) edit a set of entries; the rest edit a
+  // single text block.
+  const isList = items !== undefined;
   const copyPayload = items ? items.join('\n\n') : (text ?? '');
+
+  function startEdit() {
+    setDraftText(text ?? '');
+    setDraftItems(items ? [...items] : []);
+    setToast(null);
+    setMenuOpen(false);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+  }
+
+  function saveEdit() {
+    if (isList) {
+      // Drop entries emptied out during editing so we never publish a blank post.
+      onSave?.(draftItems.map((entry) => entry.trim()).filter(Boolean));
+    } else {
+      onSave?.(draftText);
+    }
+    setEditing(false);
+  }
+
+  function updateItem(index: number, value: string) {
+    setDraftItems((current) =>
+      current.map((entry, i) => (i === index ? value : entry)),
+    );
+  }
+
+  function removeItem(index: number) {
+    setDraftItems((current) => current.filter((_, i) => i !== index));
+  }
+
+  function addItem() {
+    setDraftItems((current) => [...current, '']);
+  }
 
   // Only text-capable, unexpired connections can receive this text-only card.
   const publishTargets = connections.filter(
@@ -151,7 +205,26 @@ export function ContentCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {!comingSoon && publishTargets.length > 0 && (
+          {editing ? (
+            <>
+              <button
+                onClick={saveEdit}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-brand-500/30 transition hover:opacity-90"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Save
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+              >
+                <CloseIcon className="h-3.5 w-3.5" />
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              {!comingSoon && publishTargets.length > 0 && (
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((open) => !open)}
@@ -203,6 +276,15 @@ export function ContentCard({
             </div>
           )}
 
+          <button
+            onClick={startEdit}
+            aria-label={`Edit ${title} content`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+
           <div className="relative">
             <button
               onClick={handleCopy}
@@ -231,6 +313,8 @@ export function ContentCard({
               )}
             </AnimatePresence>
           </div>
+            </>
+          )}
         </div>
       </header>
 
@@ -287,7 +371,45 @@ export function ContentCard({
         )}
       </AnimatePresence>
 
-      {items ? (
+      {editing ? (
+        isList ? (
+          <div className="space-y-3">
+            {draftItems.map((entry, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <textarea
+                  value={entry}
+                  onChange={(event) => updateItem(index, event.target.value)}
+                  rows={3}
+                  className="scroll-slim w-full resize-none rounded-lg border border-white/10 bg-slate-900/60 p-3 text-sm leading-relaxed text-slate-100 outline-none transition focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  aria-label={`Remove entry ${index + 1}`}
+                  className="mt-1 shrink-0 rounded-lg border border-white/10 bg-white/5 p-2 text-slate-400 transition hover:bg-white/10 hover:text-red-300"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addItem}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-white/15 px-3 py-2 text-xs font-medium text-slate-400 transition hover:border-white/30 hover:text-slate-200"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add another
+            </button>
+          </div>
+        ) : (
+          <textarea
+            value={draftText}
+            onChange={(event) => setDraftText(event.target.value)}
+            rows={8}
+            className="scroll-slim w-full resize-none rounded-lg border border-white/10 bg-slate-900/60 p-3 text-sm leading-relaxed text-slate-100 outline-none transition focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/30"
+          />
+        )
+      ) : items ? (
         <ol className="scroll-slim max-h-80 space-y-3 overflow-y-auto pr-1">
           {items.map((entry, index) => (
             <li
