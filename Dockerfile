@@ -76,15 +76,13 @@ COPY --from=builder /workspace/apps/api/dist/workspace_modules ./workspace_modul
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --prod --frozen-lockfile --package-import-method copy
 COPY --from=builder /workspace/apps/api/dist/main.js ./main.js
-# Ship the Prisma migration config + schema + history so the entrypoint can run
-# `prisma migrate deploy` against the managed database at container start.
-# `prisma.config.ts` uses paths relative to the workspace root and reads the URL
-# from DATABASE_URL, so the schema/migrations must keep their `libs/database/...`
-# layout. `migrate deploy` only applies committed SQL (no client generation), so
-# the pinned Prisma CLI is fetched on demand via pnpm rather than bloating the
-# lean runtime image.
-COPY --from=builder /workspace/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /workspace/libs/database/prisma ./libs/database/prisma
+# Ship the migration history + the lightweight pg-based runner so the entrypoint
+# can apply pending migrations at container start. We intentionally do NOT run
+# the Prisma CLI at runtime — fetching it via `pnpm dlx` exhausted the 512 MB
+# instance. `scripts/migrate.mjs` uses `pg` (already a runtime dep) and reads the
+# committed SQL from this same `libs/database/...` layout.
+COPY --from=builder /workspace/libs/database/prisma/migrations ./libs/database/prisma/migrations
+COPY --from=builder /workspace/libs/database/scripts/migrate.mjs ./libs/database/scripts/migrate.mjs
 # The entrypoint applies pending migrations, then execs the server. We deploy
 # this image directly (no platform pre-deploy hook), so migrations must run here.
 COPY --from=builder /workspace/docker-entrypoint.sh ./docker-entrypoint.sh
