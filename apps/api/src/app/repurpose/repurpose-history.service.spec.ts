@@ -12,11 +12,12 @@ const sampleContent: RepurposedContent = {
 };
 
 function makeService() {
-  const create = jest.fn().mockResolvedValue(undefined);
+  const create = jest.fn().mockResolvedValue({ id: 'job-new' });
   const findMany = jest.fn();
-  const prisma = { repurposeJob: { create, findMany } };
+  const findFirst = jest.fn();
+  const prisma = { repurposeJob: { create, findMany, findFirst } };
   const service = new RepurposeHistoryService(prisma as never);
-  return { service, create, findMany };
+  return { service, create, findMany, findFirst };
 }
 
 describe('RepurposeHistoryService', () => {
@@ -27,7 +28,7 @@ describe('RepurposeHistoryService', () => {
     ])('persists a $sourceType generation', async ({ sourceType, source }) => {
       const { service, create } = makeService();
 
-      await service.record('user-1', source, sourceType, sampleContent);
+      const id = await service.record('user-1', source, sourceType, sampleContent);
 
       expect(create).toHaveBeenCalledWith({
         data: {
@@ -37,6 +38,42 @@ describe('RepurposeHistoryService', () => {
           content: sampleContent,
         },
       });
+      expect(id).toBe('job-new');
+    });
+  });
+
+  describe('getById', () => {
+    it('scopes the lookup to the owner and projects the shape', async () => {
+      const { service, findFirst } = makeService();
+      const createdAt = new Date('2026-08-07T10:00:00.000Z');
+      findFirst.mockResolvedValue({
+        id: 'job-a',
+        userId: 'user-1',
+        source: 'hello world',
+        sourceType: 'text',
+        content: sampleContent,
+        createdAt,
+      });
+
+      const item = await service.getById('user-1', 'job-a');
+
+      expect(findFirst).toHaveBeenCalledWith({
+        where: { id: 'job-a', userId: 'user-1' },
+      });
+      expect(item).toEqual({
+        id: 'job-a',
+        createdAt: createdAt.toISOString(),
+        sourceType: 'text',
+        sourcePreview: 'hello world',
+        content: sampleContent,
+      });
+    });
+
+    it('returns null when no owned row matches', async () => {
+      const { service, findFirst } = makeService();
+      findFirst.mockResolvedValue(null);
+
+      await expect(service.getById('user-1', 'missing')).resolves.toBeNull();
     });
   });
 

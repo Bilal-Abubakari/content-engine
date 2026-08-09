@@ -32,14 +32,25 @@ type Status = 'idle' | 'loading' | 'done' | 'error';
 export function Dashboard({
   userName,
   settings,
+  initialContent = null,
+  initialContentId = null,
 }: {
   userName: string;
   settings: UserSettings;
+  /** A saved generation to show on load (from a `?c=<id>` deep link). */
+  initialContent?: RepurposedContent | null;
+  /** Id of {@link initialContent}, used to keep the URL in sync. */
+  initialContentId?: string | null;
 }) {
   const [source, setSource] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
+  // Seed from a deep-linked generation so a refresh keeps the result visible.
+  const [status, setStatus] = useState<Status>(
+    initialContent ? 'done' : 'idle',
+  );
   const [error, setError] = useState<string | null>(null);
-  const [content, setContent] = useState<RepurposedContent | null>(null);
+  const [content, setContent] = useState<RepurposedContent | null>(
+    initialContent,
+  );
   // Per-run overrides, pre-filled from saved settings. Tweaking these here does
   // not change the saved defaults — only this generation.
   const [formats, setFormats] = useState<GenerationFormat[]>(settings.formats);
@@ -83,6 +94,9 @@ export function Dashboard({
       setContent(data.content);
       setStatus('done');
       setUsageRefresh((n) => n + 1);
+      // Give the result a stable, shareable URL without a navigation/refetch, so
+      // a refresh reloads exactly this generation from the server.
+      window.history.replaceState(null, '', `/dashboard?c=${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unexpected error.');
       setStatus('error');

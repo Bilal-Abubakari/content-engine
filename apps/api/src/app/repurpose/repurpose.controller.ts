@@ -5,6 +5,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
+  Param,
   Post,
   Req,
   UnauthorizedException,
@@ -62,8 +64,13 @@ export class RepurposeController {
     const options = this.resolveOptions(settings, body);
     const result = await this.repurposeService.repurpose(source, options);
     await this.usage.increment(userId);
-    await this.historyService.record(userId, source, sourceType, result.content);
-    return result;
+    const id = await this.historyService.record(
+      userId,
+      source,
+      sourceType,
+      result.content,
+    );
+    return { id, ...result };
   }
 
   /**
@@ -143,6 +150,23 @@ export class RepurposeController {
     @Req() req: AuthenticatedRequest,
   ): Promise<RepurposeHistoryItem[]> {
     return this.historyService.list(this.userId(req));
+  }
+
+  /**
+   * GET /api/repurpose/history/:id
+   * A single past generation the user owns, so a result can be reopened from
+   * its own URL. Returns 404 when the id is unknown or belongs to someone else.
+   */
+  @Get('history/:id')
+  async historyItem(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<RepurposeHistoryItem> {
+    const item = await this.historyService.getById(this.userId(req), id);
+    if (!item) {
+      throw new NotFoundException('Generation not found.');
+    }
+    return item;
   }
 
   /** Extract the verified user id or reject the request. */

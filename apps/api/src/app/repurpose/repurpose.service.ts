@@ -55,7 +55,7 @@ export class RepurposeService {
   async repurpose(
     rawSource: string,
     options: GenerationOptions,
-  ): Promise<RepurposeResponse> {
+  ): Promise<Omit<RepurposeResponse, 'id'>> {
     const source = this.validateSource(rawSource);
     const sourceType = this.detectSourceType(source);
 

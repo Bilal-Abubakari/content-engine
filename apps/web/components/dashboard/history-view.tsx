@@ -1,20 +1,20 @@
 'use client';
 
-import type { RepurposedContent, RepurposeHistoryItem } from '@org/shared';
+import type { RepurposeHistoryItem } from '@org/shared';
 import { Clock, FileText, Link2, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
 import { Hint } from '../tour/hint';
-import { ResultsGrid } from './results-grid';
 
 /**
  * Full-page view of the user's recent repurpose generations. Selecting one
- * reopens its stored content inline via {@link ResultsGrid}.
+ * opens it on the dashboard at its own `?c=<id>` URL, so the result is
+ * refreshable and shareable.
  */
 export function HistoryView() {
   const [items, setItems] = useState<RepurposeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<RepurposedContent | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -83,8 +83,8 @@ export function HistoryView() {
           <ul className="space-y-2">
             {items.map((item) => (
               <li key={item.id}>
-                <button
-                  onClick={() => setSelected(item.content)}
+                <Link
+                  href={`/dashboard?c=${encodeURIComponent(item.id)}`}
                   className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-slate-900/40 px-4 py-3 text-left transition hover:bg-white/5"
                 >
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/5 text-slate-300">
@@ -105,14 +105,12 @@ export function HistoryView() {
                   <span className="shrink-0 text-xs font-medium text-brand-300">
                     Open
                   </span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
         )}
       </section>
-
-      {selected && <ResultsGrid content={selected} />}
     </main>
   );
 }

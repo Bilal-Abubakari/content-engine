@@ -44,6 +44,8 @@ export interface RepurposeRequest {
 
 /** Successful envelope returned by the repurpose endpoint. */
 export interface RepurposeResponse {
+  /** Id of the persisted history record, so the result has a stable URL. */
+  id: string;
   content: RepurposedContent;
   /** ISO timestamp of when the content was generated. */
   generatedAt: string;

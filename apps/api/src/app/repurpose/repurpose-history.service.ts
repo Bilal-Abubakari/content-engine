@@ -21,14 +21,14 @@ const PREVIEW_MAX = 120;
 export class RepurposeHistoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Save one completed generation for later retrieval. */
+  /** Save one completed generation and return its new id. */
   async record(
     userId: string,
     source: string,
     sourceType: RepurposeSourceType,
     content: RepurposedContent,
-  ): Promise<void> {
-    await this.prisma.repurposeJob.create({
+  ): Promise<string> {
+    const job = await this.prisma.repurposeJob.create({
       data: {
         userId,
         source,
@@ -36,6 +36,7 @@ export class RepurposeHistoryService {
         content: content as unknown as Prisma.InputJsonValue,
       },
     });
+    return job.id;
   }
 
   /** The user's most recent generations, newest first. */
@@ -46,6 +47,21 @@ export class RepurposeHistoryService {
       take: HISTORY_LIMIT,
     });
     return jobs.map((job) => this.toHistoryItem(job));
+  }
+
+  /**
+   * A single generation the user owns, or null when it doesn't exist or belongs
+   * to someone else. Scoped by `userId` so ids can't be used to read across
+   * accounts.
+   */
+  async getById(
+    userId: string,
+    id: string,
+  ): Promise<RepurposeHistoryItem | null> {
+    const job = await this.prisma.repurposeJob.findFirst({
+      where: { id, userId },
+    });
+    return job ? this.toHistoryItem(job) : null;
   }
 
   /** Project a stored row onto the shared, client-facing shape. */
