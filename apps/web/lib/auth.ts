@@ -38,6 +38,12 @@ export const authOptions: NextAuthOptions = {
   providers,
   secret: process.env.AUTH_SECRET,
   session: { strategy: 'jwt' },
+  // Route sign-in and auth errors to our branded /login page instead of
+  // NextAuth's default unstyled screens.
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
