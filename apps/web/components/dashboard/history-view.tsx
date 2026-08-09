@@ -4,6 +4,7 @@ import type { RepurposedContent, RepurposeHistoryItem } from '@org/shared';
 import { Clock, FileText, Link2, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
+import { Hint } from '../tour/hint';
 import { ResultsGrid } from './results-grid';
 
 /**
@@ -54,6 +55,11 @@ export function HistoryView() {
       <p className="mt-2 text-slate-400">
         Revisit anything you&apos;ve repurposed and reopen it in one click.
       </p>
+
+      <Hint id="history-intro" title="Everything is saved here" className="mt-6">
+        Every generation is stored automatically. Click any entry to reopen its
+        cards exactly as they were — nothing is ever lost.
+      </Hint>
 
       <section className="glass mt-8 p-5 sm:p-6">
         <header className="mb-4 flex items-center gap-2">

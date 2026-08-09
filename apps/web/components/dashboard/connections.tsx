@@ -19,6 +19,7 @@ import type { ComponentType, SVGProps } from 'react';
 import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
 import { LinkedInIcon, XIcon } from '../icons/brand-icons';
+import { Hint } from '../tour/hint';
 
 type Glyph = ComponentType<SVGProps<SVGSVGElement>> | LucideIcon;
 
@@ -107,6 +108,12 @@ export function Connections() {
         Link your social accounts to publish repurposed content directly from
         the dashboard.
       </p>
+
+      <Hint id="connections-intro" title="One-time setup" className="mt-6">
+        Connect an account once and the publish button on every generated card
+        will post to it — no copy-pasting between tabs. You can disconnect at
+        any time.
+      </Hint>
 
       {flash && (
         <div
