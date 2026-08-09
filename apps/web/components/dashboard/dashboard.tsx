@@ -44,6 +44,8 @@ export function Dashboard({
   // not change the saved defaults — only this generation.
   const [formats, setFormats] = useState<GenerationFormat[]>(settings.formats);
   const [tone, setTone] = useState<ContentTone>(settings.tone);
+  // Bumped after each successful generation so the usage meter refetches.
+  const [usageRefresh, setUsageRefresh] = useState(0);
 
   const canSubmit =
     source.trim().length > 0 && formats.length > 0 && status !== 'loading';
@@ -80,6 +82,7 @@ export function Dashboard({
       const data = (await response.json()) as RepurposeResponse;
       setContent(data.content);
       setStatus('done');
+      setUsageRefresh((n) => n + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unexpected error.');
       setStatus('error');
@@ -130,7 +133,7 @@ export function Dashboard({
         </motion.div>
 
         <div data-tour="usage" className="mt-8">
-          <PlanPanel />
+          <PlanPanel refreshSignal={usageRefresh} />
         </div>
 
         <motion.form

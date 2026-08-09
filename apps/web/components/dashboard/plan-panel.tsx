@@ -20,7 +20,7 @@ interface PlanState {
  * meter, and a primary action (upgrade for free users, manage billing for
  * paying ones). Data is loaded from the authenticated proxy routes.
  */
-export function PlanPanel() {
+export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
   const [state, setState] = useState<PlanState | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalPending, setPortalPending] = useState(false);
@@ -40,9 +40,11 @@ export function PlanPanel() {
     }
   }, []);
 
+  // Reload when `refreshSignal` changes so the meter reflects a just-finished
+  // generation without a full page refresh.
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshSignal]);
 
   async function openPortal() {
     setPortalPending(true);
