@@ -20,7 +20,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Hint } from '../tour/hint';
 import { TourLauncher } from '../tour/tour-launcher';
 import { TourProvider } from '../tour/tour-provider';
@@ -57,6 +57,19 @@ export function Dashboard({
   const [tone, setTone] = useState<ContentTone>(settings.tone);
   // Bumped after each successful generation so the usage meter refetches.
   const [usageRefresh, setUsageRefresh] = useState(0);
+  // The results/skeleton area, brought into view when a generation starts so
+  // the user always sees that something is happening (the form can push it
+  // below the fold on shorter screens).
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (status === 'loading' || status === 'done') {
+      resultsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, [status]);
 
   const canSubmit =
     source.trim().length > 0 && formats.length > 0 && status !== 'loading';
@@ -268,20 +281,24 @@ export function Dashboard({
           )}
         </AnimatePresence>
 
-        {status === 'loading' && <ResultsSkeleton />}
-        {status === 'done' && content && (
-          <>
-            <Hint
-              id="first-generation"
-              title="Your content is ready"
-              className="mt-8"
-            >
-              Copy any card, tweak the wording, or publish straight to a
-              connected channel. Nothing is saved until you say so.
-            </Hint>
-            <ResultsGrid content={content} userName={userName} />
-          </>
-        )}
+        {/* Anchor with a little breathing room so the smooth scroll doesn't
+            jam the heading against the top of the viewport. */}
+        <div ref={resultsRef} className="scroll-mt-6">
+          {status === 'loading' && <ResultsSkeleton />}
+          {status === 'done' && content && (
+            <>
+              <Hint
+                id="first-generation"
+                title="Your content is ready"
+                className="mt-8"
+              >
+                Copy any card, tweak the wording, or publish straight to a
+                connected channel. Nothing is saved until you say so.
+              </Hint>
+              <ResultsGrid content={content} userName={userName} />
+            </>
+          )}
+        </div>
       </main>
       <TourLauncher />
     </TourProvider>
@@ -290,24 +307,41 @@ export function Dashboard({
 
 function ResultsSkeleton() {
   return (
-    <div className="mt-10 columns-1 gap-6 md:columns-2 xl:columns-3">
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="glass mb-6 break-inside-avoid animate-pulse p-5"
-          style={{ height: `${180 + (i % 3) * 60}px` }}
-        >
-          <div className="mb-4 flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-white/10" />
-            <div className="h-4 w-24 rounded bg-white/10" />
-          </div>
-          <div className="space-y-2.5">
-            <div className="h-3 w-full rounded bg-white/10" />
-            <div className="h-3 w-11/12 rounded bg-white/10" />
-            <div className="h-3 w-4/5 rounded bg-white/10" />
-          </div>
+    <div className="mt-10">
+      <div
+        role="status"
+        aria-live="polite"
+        className="mb-6 flex items-center gap-3 rounded-xl border border-brand-400/20 bg-brand-500/10 px-4 py-3"
+      >
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-brand-300" />
+        <div>
+          <p className="text-sm font-medium text-slate-100">
+            Repurposing your content…
+          </p>
+          <p className="text-xs text-slate-400">
+            Crafting your posts — this usually takes just a few seconds.
+          </p>
         </div>
-      ))}
+      </div>
+      <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="glass mb-6 break-inside-avoid animate-pulse p-5"
+            style={{ height: `${180 + (i % 3) * 60}px` }}
+          >
+            <div className="mb-4 flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-lg bg-white/10" />
+              <div className="h-4 w-24 rounded bg-white/10" />
+            </div>
+            <div className="space-y-2.5">
+              <div className="h-3 w-full rounded bg-white/10" />
+              <div className="h-3 w-11/12 rounded bg-white/10" />
+              <div className="h-3 w-4/5 rounded bg-white/10" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
