@@ -8,7 +8,9 @@ import {
 } from '@org/shared';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ExternalLink, Eye, Loader2, Send } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Hint } from '../tour/hint';
 import { buildPlatformCards, platformContentText } from './build-cards';
 import { ContentCard } from './content-card';
 import { PreviewModal } from './preview-modal';
@@ -42,6 +44,9 @@ export function ResultsGrid({
 
   const cards = buildPlatformCards(content);
   const [connections, setConnections] = useState<SocialConnectionView[]>([]);
+  // Distinguishes "still loading" from "loaded, none connected" so the
+  // connect-an-account nudge doesn't flash before the fetch resolves.
+  const [connectionsLoaded, setConnectionsLoaded] = useState(false);
 
   function handleEdit(
     field: keyof RepurposedContent,
@@ -73,6 +78,10 @@ export function ResultsGrid({
         }
       } catch {
         /* leave empty — the Publish menu simply won't appear */
+      } finally {
+        if (active) {
+          setConnectionsLoaded(true);
+        }
       }
     })();
     return () => {
@@ -165,6 +174,24 @@ export function ResultsGrid({
           )}
         </div>
       </div>
+
+      {connectionsLoaded && connections.length === 0 && (
+        <Hint
+          id="no-connections"
+          title="Connect an account to publish"
+          className="mb-6"
+        >
+          You haven&apos;t linked any social accounts yet.{' '}
+          <Link
+            href="/dashboard/connections"
+            className="font-medium text-brand-200 underline underline-offset-2 transition hover:text-brand-100"
+          >
+            Connect one
+          </Link>{' '}
+          and a publish button appears on every card so you can post without
+          leaving this page.
+        </Hint>
+      )}
 
       <AnimatePresence>
         {bulkResult && (

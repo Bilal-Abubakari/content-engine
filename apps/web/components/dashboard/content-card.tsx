@@ -204,7 +204,7 @@ export function ContentCard({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {editing ? (
             <>
               <button
@@ -230,7 +230,7 @@ export function ContentCard({
                 onClick={() => setMenuOpen((open) => !open)}
                 disabled={publishing !== null}
                 aria-label={`Publish ${title} content`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
               >
                 {publishing ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -279,24 +279,24 @@ export function ContentCard({
           <button
             onClick={startEdit}
             aria-label={`Edit ${title} content`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+            title="Edit"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"
           >
             <Pencil className="h-3.5 w-3.5" />
-            Edit
           </button>
 
           <div className="relative">
             <button
               onClick={handleCopy}
               aria-label={`Copy ${title} content`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+              title="Copy"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-400" />
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
-              {copied ? 'Copied' : 'Copy'}
             </button>
 
             <AnimatePresence>
