@@ -177,7 +177,7 @@ export function Dashboard({
           <div>
             <label
               htmlFor="tone"
-              className="text-xs font-medium text-slate-400"
+              className="block text-xs font-medium text-slate-400"
             >
               Tone
             </label>
