@@ -260,7 +260,7 @@ export function SettingsForm({
         <div>
           <label
             htmlFor="language"
-            className="text-sm font-semibold text-slate-200"
+            className="block text-sm font-semibold text-slate-200"
           >
             Output language
           </label>
