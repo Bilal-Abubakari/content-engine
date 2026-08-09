@@ -62,6 +62,16 @@ const envSchema = z.object({
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
   TIKTOK_CLIENT_KEY: z.string().optional(),
   TIKTOK_CLIENT_SECRET: z.string().optional(),
+
+  // --- Media uploads (Cloudinary) --------------------------------------------
+  // Signed direct-browser uploads: the API mints a signature (needs the secret)
+  // and the file goes straight to Cloudinary, never through this server.
+  // Optional at boot; the media module throws a clear 503 if an upload is
+  // attempted before these are set. Folder defaults to `content-engine`.
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  CLOUDINARY_UPLOAD_FOLDER: z.string().optional(),
 });
 
 export type ApiEnv = z.infer<typeof envSchema>;

@@ -2,6 +2,8 @@
 
 import {
   PLATFORM_CATALOGUE,
+  mediaSatisfiesPlatform,
+  type MediaItem,
   type RepurposedContent,
   type SocialConnectionView,
   type SocialPlatform,
@@ -21,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useState } from 'react';
+import { MediaAttachments } from './media-attachments';
 
 export interface ContentCardProps {
   title: string;
@@ -43,6 +46,18 @@ export interface ContentCardProps {
    * list-style cards (tweets/thread) and a `string` for single-text cards.
    */
   onSave?: (value: string | string[]) => void;
+  /** Media assets attached to this card, published alongside the text. */
+  media?: MediaItem[];
+  /** Every asset uploaded this session, offered in the reuse picker. */
+  mediaPool?: MediaItem[];
+  /** Upload a file for this card; `applyToAll` attaches it to every card. */
+  onUpload?: (file: File, applyToAll: boolean) => Promise<void>;
+  /** Attach an already-uploaded asset to this card. */
+  onAttachMedia?: (id: string) => void;
+  /** Remove an asset from this card. */
+  onDetachMedia?: (id: string) => void;
+  /** Attach an asset to every card at once. */
+  onAttachMediaToAll?: (id: string) => void;
 }
 
 /** A banner shown after a publish attempt; carries the post link on success. */
@@ -62,6 +77,12 @@ export function ContentCard({
   connections = [],
   comingSoon = false,
   onSave,
+  media = [],
+  mediaPool = [],
+  onUpload,
+  onAttachMedia,
+  onDetachMedia,
+  onAttachMediaToAll,
 }: ContentCardProps) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -113,10 +134,17 @@ export function ContentCard({
     setDraftItems((current) => [...current, '']);
   }
 
-  // Only text-capable, unexpired connections can receive this text-only card.
-  const publishTargets = connections.filter(
-    (c) => PLATFORM_CATALOGUE[c.platform]?.capabilities.text && !c.expired,
-  );
+  // Unexpired connections that can receive this card: text platforms always,
+  // media-only platforms (Instagram/TikTok) once a matching asset is attached.
+  const publishTargets = connections.filter((c) => {
+    const capabilities = PLATFORM_CATALOGUE[c.platform]?.capabilities;
+    if (!capabilities || c.expired) {
+      return false;
+    }
+    return capabilities.requiresMedia
+      ? mediaSatisfiesPlatform(c.platform, media)
+      : capabilities.text;
+  });
 
   async function handleCopy() {
     try {
@@ -137,7 +165,11 @@ export function ContentCard({
       const res = await fetch('/api/social/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform, content: copyPayload }),
+        body: JSON.stringify({
+          platform,
+          content: copyPayload,
+          mediaUrls: media.map((item) => item.url),
+        }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as {
@@ -424,6 +456,17 @@ export function ContentCard({
         <p className="scroll-slim max-h-80 overflow-y-auto whitespace-pre-wrap pr-1 text-sm leading-relaxed text-slate-200">
           {text}
         </p>
+      )}
+
+      {!editing && onUpload && onAttachMedia && onDetachMedia && onAttachMediaToAll && (
+        <MediaAttachments
+          media={media}
+          pool={mediaPool}
+          onUpload={onUpload}
+          onAttach={onAttachMedia}
+          onDetach={onDetachMedia}
+          onAttachToAll={onAttachMediaToAll}
+        />
       )}
     </motion.article>
   );

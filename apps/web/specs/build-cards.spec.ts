@@ -2,6 +2,7 @@ import type { RepurposedContent, SocialPlatform } from '@org/shared';
 import {
   buildPlatformCards,
   platformContentText,
+  platformMediaField,
 } from '../components/dashboard/build-cards';
 
 const sample: RepurposedContent = {
@@ -101,4 +102,16 @@ describe('platformContentText', () => {
       expect(platformContentText({}, platform)).toBe('');
     },
   );
+});
+
+describe('platformMediaField', () => {
+  it.each<{ platform: SocialPlatform; field: keyof RepurposedContent }>([
+    { platform: 'x', field: 'tweets' },
+    { platform: 'linkedin', field: 'linkedIn' },
+    { platform: 'facebook', field: 'facebook' },
+    { platform: 'instagram', field: 'instagram' },
+    { platform: 'tiktok', field: 'tiktok' },
+  ])('keys $platform media on the $field card', ({ platform, field }) => {
+    expect(platformMediaField(platform)).toBe(field);
+  });
 });

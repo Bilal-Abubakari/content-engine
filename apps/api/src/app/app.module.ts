@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BillingModule } from './billing/billing.module';
 import { HealthModule } from './health/health.module';
+import { MediaModule } from './media/media.module';
 import { RepurposeModule } from './repurpose/repurpose.module';
 import { SettingsModule } from './settings/settings.module';
 import { SocialModule } from './social/social.module';
@@ -21,6 +22,7 @@ import { SocialModule } from './social/social.module';
     BillingModule,
     SocialModule,
     SettingsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [

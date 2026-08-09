@@ -2,6 +2,8 @@
 
 import {
   PLATFORM_CATALOGUE,
+  mediaSatisfiesPlatform,
+  type MediaItem,
   type RepurposedContent,
   type SocialConnectionView,
   type SocialPlatform,
@@ -10,8 +12,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ExternalLink, Eye, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { uploadMedia } from '@/lib/upload-media';
 import { Hint } from '../tour/hint';
-import { buildPlatformCards, platformContentText } from './build-cards';
+import {
+  buildPlatformCards,
+  platformContentText,
+  platformMediaField,
+} from './build-cards';
 import { ContentCard } from './content-card';
 import { PreviewModal } from './preview-modal';
 
@@ -43,6 +50,68 @@ export function ResultsGrid({
   }, [initialContent]);
 
   const cards = buildPlatformCards(content);
+
+  // Session-level media: everything uploaded lives in `pool`, and each card's
+  // attachments are the pool ids it references — so one asset can be reused
+  // across cards (or all of them) without re-uploading.
+  const [pool, setPool] = useState<MediaItem[]>([]);
+  const [attachments, setAttachments] = useState<Record<string, string[]>>({});
+
+  function mediaForField(field: keyof RepurposedContent): MediaItem[] {
+    return (attachments[field] ?? [])
+      .map((id) => pool.find((item) => item.id === id))
+      .filter((item): item is MediaItem => Boolean(item));
+  }
+
+  function mediaForPlatform(platform: SocialPlatform): MediaItem[] {
+    return mediaForField(platformMediaField(platform));
+  }
+
+  function attachMedia(field: keyof RepurposedContent, id: string) {
+    setAttachments((current) => {
+      const ids = current[field] ?? [];
+      return ids.includes(id) ? current : { ...current, [field]: [...ids, id] };
+    });
+  }
+
+  function detachMedia(field: keyof RepurposedContent, id: string) {
+    setAttachments((current) => ({
+      ...current,
+      [field]: (current[field] ?? []).filter((existing) => existing !== id),
+    }));
+  }
+
+  function attachMediaToAll(id: string) {
+    setAttachments((current) => {
+      const next = { ...current };
+      for (const card of cards) {
+        const ids = next[card.field] ?? [];
+        if (!ids.includes(id)) {
+          next[card.field] = [...ids, id];
+        }
+      }
+      return next;
+    });
+  }
+
+  async function handleUpload(
+    field: keyof RepurposedContent,
+    file: File,
+    applyToAll: boolean,
+  ) {
+    const item = await uploadMedia(file);
+    setPool((current) =>
+      current.some((existing) => existing.id === item.id)
+        ? current
+        : [...current, item],
+    );
+    if (applyToAll) {
+      attachMediaToAll(item.id);
+    } else {
+      attachMedia(field, item.id);
+    }
+  }
+
   const [connections, setConnections] = useState<SocialConnectionView[]>([]);
   // Distinguishes "still loading" from "loaded, none connected" so the
   // connect-an-account nudge doesn't flash before the fetch resolves.
@@ -89,10 +158,17 @@ export function ResultsGrid({
     };
   }, []);
 
-  // Connected, unexpired accounts that accept text — the "Publish all" targets.
-  const publishTargets = connections.filter(
-    (c) => PLATFORM_CATALOGUE[c.platform]?.capabilities.text && !c.expired,
-  );
+  // Connected, unexpired accounts we can post to in bulk: text platforms, plus
+  // media-only ones (Instagram/TikTok) once a matching asset is attached.
+  const publishTargets = connections.filter((c) => {
+    const capabilities = PLATFORM_CATALOGUE[c.platform]?.capabilities;
+    if (!capabilities || c.expired) {
+      return false;
+    }
+    return capabilities.requiresMedia
+      ? mediaSatisfiesPlatform(c.platform, mediaForPlatform(c.platform))
+      : capabilities.text;
+  });
 
   async function handlePublishAll() {
     setPublishingAll(true);
@@ -110,6 +186,9 @@ export function ResultsGrid({
           body: JSON.stringify({
             platform: connection.platform,
             content: platformContentText(content, connection.platform),
+            mediaUrls: mediaForPlatform(connection.platform).map(
+              (item) => item.url,
+            ),
           }),
         });
         if (!res.ok) {
@@ -248,6 +327,14 @@ export function ResultsGrid({
             {...card}
             connections={connections}
             onSave={(value) => handleEdit(card.field, value)}
+            media={mediaForField(card.field)}
+            mediaPool={pool}
+            onUpload={(file, applyToAll) =>
+              handleUpload(card.field, file, applyToAll)
+            }
+            onAttachMedia={(id) => attachMedia(card.field, id)}
+            onDetachMedia={(id) => detachMedia(card.field, id)}
+            onAttachMediaToAll={(id) => attachMediaToAll(id)}
           />
         ))}
       </motion.div>
@@ -258,6 +345,13 @@ export function ResultsGrid({
             content={content}
             userName={userName}
             active={previewPlatform}
+            media={{
+              x: mediaForPlatform('x'),
+              linkedin: mediaForPlatform('linkedin'),
+              facebook: mediaForPlatform('facebook'),
+              instagram: mediaForPlatform('instagram'),
+              tiktok: mediaForPlatform('tiktok'),
+            }}
             onSelect={setPreviewPlatform}
             onClose={() => setPreviewOpen(false)}
           />

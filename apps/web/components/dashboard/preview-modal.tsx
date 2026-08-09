@@ -3,6 +3,7 @@
 import {
   PLATFORM_CATALOGUE,
   SOCIAL_PLATFORMS,
+  type MediaItem,
   type RepurposedContent,
   type SocialPlatform,
 } from '@org/shared';
@@ -63,16 +64,20 @@ export function PreviewModal({
   content,
   userName,
   active,
+  media,
   onSelect,
   onClose,
 }: {
   content: RepurposedContent;
   userName: string;
   active: SocialPlatform;
+  /** Assets attached to each platform's card, rendered in the mockups. */
+  media: Partial<Record<SocialPlatform, MediaItem[]>>;
   onSelect: (platform: SocialPlatform) => void;
   onClose: () => void;
 }) {
   const persona = toPersona(userName);
+  const activeMedia = media[active] ?? [];
 
   // Close on Escape and lock body scroll while the modal is open.
   useEffect(() => {
@@ -170,6 +175,7 @@ export function PreviewModal({
                 platform={active}
                 content={content}
                 persona={persona}
+                media={activeMedia}
               />
             </motion.div>
           </AnimatePresence>
@@ -183,43 +189,85 @@ function PlatformPreview({
   platform,
   content,
   persona,
+  media,
 }: {
   platform: SocialPlatform;
   content: RepurposedContent;
   persona: Persona;
+  media: MediaItem[];
 }) {
   switch (platform) {
     case 'x':
       return content.tweets ? (
-        <XPreview tweets={content.tweets} persona={persona} />
+        <XPreview tweets={content.tweets} persona={persona} media={media} />
       ) : (
         <NotGenerated />
       );
     case 'linkedin':
       return content.linkedIn ? (
-        <LinkedInPreview text={content.linkedIn} persona={persona} />
+        <LinkedInPreview
+          text={content.linkedIn}
+          persona={persona}
+          media={media}
+        />
       ) : (
         <NotGenerated />
       );
     case 'facebook':
       return content.facebook ? (
-        <FacebookPreview text={content.facebook} persona={persona} />
+        <FacebookPreview
+          text={content.facebook}
+          persona={persona}
+          media={media}
+        />
       ) : (
         <NotGenerated />
       );
     case 'instagram':
       return content.instagram ? (
-        <InstagramPreview caption={content.instagram} persona={persona} />
+        <InstagramPreview
+          caption={content.instagram}
+          persona={persona}
+          media={media}
+        />
       ) : (
         <NotGenerated />
       );
     case 'tiktok':
       return content.tiktok ? (
-        <TikTokPreview script={content.tiktok} persona={persona} />
+        <TikTokPreview script={content.tiktok} persona={persona} media={media} />
       ) : (
         <NotGenerated />
       );
   }
+}
+
+/** Renders the first attached asset as a feed image/video, or nothing. */
+function MediaShowcase({
+  media,
+  className = '',
+}: {
+  media: MediaItem[];
+  className?: string;
+}) {
+  const first = media[0];
+  if (!first) {
+    return null;
+  }
+  return first.kind === 'video' ? (
+    <video
+      src={first.url}
+      controls
+      playsInline
+      className={`w-full rounded-lg bg-black object-cover ${className}`}
+    />
+  ) : (
+    <img
+      src={first.url}
+      alt=""
+      className={`w-full rounded-lg object-cover ${className}`}
+    />
+  );
 }
 
 /** Shown when the selected platform's format wasn't part of this generation. */
@@ -260,9 +308,11 @@ function Surface({ children }: { children: React.ReactNode }) {
 function XPreview({
   tweets,
   persona,
+  media,
 }: {
   tweets: string[];
   persona: Persona;
+  media: MediaItem[];
 }) {
   return (
     <Surface>
@@ -282,6 +332,7 @@ function XPreview({
             <p className="mt-0.5 whitespace-pre-wrap text-[15px] leading-snug">
               {tweet}
             </p>
+            {index === 0 && <MediaShowcase media={media} className="mt-2" />}
             <div className="mt-2 flex max-w-xs items-center justify-between text-slate-500">
               <MessageCircle className="h-4 w-4" />
               <Repeat2 className="h-4 w-4" />
@@ -296,7 +347,15 @@ function XPreview({
   );
 }
 
-function LinkedInPreview({ text, persona }: { text: string; persona: Persona }) {
+function LinkedInPreview({
+  text,
+  persona,
+  media,
+}: {
+  text: string;
+  persona: Persona;
+  media: MediaItem[];
+}) {
   return (
     <Surface>
       <div className="flex items-center gap-2">
@@ -312,6 +371,7 @@ function LinkedInPreview({ text, persona }: { text: string; persona: Persona }) 
         </div>
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{text}</p>
+      <MediaShowcase media={media} className="mt-3" />
       <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-2 text-xs font-medium text-slate-600">
         <span className="flex items-center gap-1.5">
           <ThumbsUp className="h-4 w-4" /> Like
@@ -330,7 +390,15 @@ function LinkedInPreview({ text, persona }: { text: string; persona: Persona }) 
   );
 }
 
-function FacebookPreview({ text, persona }: { text: string; persona: Persona }) {
+function FacebookPreview({
+  text,
+  persona,
+  media,
+}: {
+  text: string;
+  persona: Persona;
+  media: MediaItem[];
+}) {
   return (
     <Surface>
       <div className="flex items-center gap-2">
@@ -343,6 +411,7 @@ function FacebookPreview({ text, persona }: { text: string; persona: Persona }) 
         </div>
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{text}</p>
+      <MediaShowcase media={media} className="mt-3" />
       <div className="mt-3 flex items-center justify-around border-t border-slate-200 pt-2 text-sm font-medium text-slate-600">
         <span className="flex items-center gap-1.5">
           <ThumbsUp className="h-4 w-4" /> Like
@@ -361,10 +430,13 @@ function FacebookPreview({ text, persona }: { text: string; persona: Persona }) 
 function InstagramPreview({
   caption,
   persona,
+  media,
 }: {
   caption: string;
   persona: Persona;
+  media: MediaItem[];
 }) {
+  const first = media[0];
   return (
     <Surface>
       <div className="flex items-center gap-2">
@@ -372,12 +444,29 @@ function InstagramPreview({
         <p className="flex-1 text-sm font-semibold">{persona.handle.slice(1)}</p>
         <MoreHorizontal className="h-5 w-5 text-slate-500" />
       </div>
-      <div className="mt-3 grid aspect-square place-items-center rounded-lg bg-gradient-to-br from-fuchsia-100 to-orange-100 text-fuchsia-500">
-        <span className="flex flex-col items-center gap-1 text-xs font-medium">
-          <ImagePlus className="h-8 w-8" />
-          Add a photo or video
-        </span>
-      </div>
+      {first ? (
+        first.kind === 'video' ? (
+          <video
+            src={first.url}
+            controls
+            playsInline
+            className="mt-3 aspect-square w-full rounded-lg bg-black object-cover"
+          />
+        ) : (
+          <img
+            src={first.url}
+            alt=""
+            className="mt-3 aspect-square w-full rounded-lg object-cover"
+          />
+        )
+      ) : (
+        <div className="mt-3 grid aspect-square place-items-center rounded-lg bg-gradient-to-br from-fuchsia-100 to-orange-100 text-fuchsia-500">
+          <span className="flex flex-col items-center gap-1 text-xs font-medium">
+            <ImagePlus className="h-8 w-8" />
+            Add a photo or video
+          </span>
+        </div>
+      )}
       <div className="mt-3 flex items-center gap-4 text-slate-800">
         <Heart className="h-5 w-5" />
         <MessageCircle className="h-5 w-5" />
@@ -395,16 +484,35 @@ function InstagramPreview({
 function TikTokPreview({
   script,
   persona,
+  media,
 }: {
   script: string;
   persona: Persona;
+  media: MediaItem[];
 }) {
+  const video = media.find((item) => item.kind === 'video');
+  const image = media.find((item) => item.kind === 'image');
   return (
     <div className="mx-auto flex max-w-[260px] flex-col overflow-hidden rounded-2xl bg-black text-white shadow-2xl">
       <div className="relative aspect-[9/16] bg-gradient-to-b from-slate-800 to-black">
-        <div className="absolute inset-0 grid place-items-center text-slate-500">
-          <Play className="h-12 w-12" />
-        </div>
+        {video ? (
+          <video
+            src={video.url}
+            controls
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : image ? (
+          <img
+            src={image.url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center text-slate-500">
+            <Play className="h-12 w-12" />
+          </div>
+        )}
         <div className="absolute bottom-3 left-3 right-12">
           <p className="text-sm font-semibold">{persona.handle}</p>
           <p className="mt-1 line-clamp-6 whitespace-pre-wrap text-xs leading-snug text-slate-100">

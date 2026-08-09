@@ -51,7 +51,6 @@ export function buildPlatformCards(
       icon: Camera,
       accent: 'from-fuchsia-500 to-orange-500',
       text: content.instagram,
-      comingSoon: true,
     });
   }
   if (content.tiktok) {
@@ -61,7 +60,6 @@ export function buildPlatformCards(
       icon: Music2,
       accent: 'from-slate-200 to-slate-400',
       text: content.tiktok,
-      comingSoon: true,
     });
   }
   if (content.threads) {
@@ -107,5 +105,26 @@ export function platformContentText(
       return content.instagram ?? '';
     case 'tiktok':
       return content.tiktok ?? '';
+  }
+}
+
+/**
+ * The card field a platform's media attachments are keyed by, so publishing and
+ * the preview can find the assets a user attached to that platform's card.
+ */
+export function platformMediaField(
+  platform: SocialPlatform,
+): keyof RepurposedContent {
+  switch (platform) {
+    case 'x':
+      return 'tweets';
+    case 'linkedin':
+      return 'linkedIn';
+    case 'facebook':
+      return 'facebook';
+    case 'instagram':
+      return 'instagram';
+    case 'tiktok':
+      return 'tiktok';
   }
 }
