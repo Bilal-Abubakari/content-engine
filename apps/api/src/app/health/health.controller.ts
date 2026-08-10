@@ -1,6 +1,7 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { PrismaService } from '@org/database';
 import { SkipThrottle } from '@nestjs/throttler';
+import type { Response } from 'express';
 
 /** Liveness/readiness payload consumed by Docker/orchestrator health checks. */
 interface HealthStatus {
@@ -26,16 +27,24 @@ export class HealthController {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
-  /** Process is running AND the database is reachable. */
+  /**
+   * Process is running AND the database is reachable. Returns 503 when the DB
+   * ping fails so orchestrators stop routing traffic to a broken instance;
+   * `passthrough: true` lets Nest still serialize the JSON body we return.
+   */
   @Get('ready')
-  @HttpCode(HttpStatus.OK)
-  async ready(): Promise<HealthStatus> {
+  async ready(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<HealthStatus> {
     let database: 'up' | 'down' = 'up';
     try {
       await this.prisma.$queryRaw`SELECT 1`;
     } catch {
       database = 'down';
     }
+    res.status(
+      database === 'up' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE,
+    );
     return {
       status: database === 'up' ? 'ok' : 'degraded',
       database,

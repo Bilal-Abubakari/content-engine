@@ -48,9 +48,12 @@ export function Connections() {
     try {
       const res = await fetch('/api/social/connections', { cache: 'no-store' });
       if (!res.ok) {
+        setFlash({ kind: 'error', text: 'Could not load your connections.' });
         return;
       }
       setConnections((await res.json()) as SocialConnectionView[]);
+    } catch {
+      setFlash({ kind: 'error', text: 'Could not reach the server.' });
     } finally {
       setLoading(false);
     }

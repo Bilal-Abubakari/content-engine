@@ -30,6 +30,13 @@ const CONNECT_STATE_PURPOSE = 'social-connect';
 const CONNECT_STATE_TTL = '10m';
 /** Max posts a single scheduler drain will attempt, to bound the work. */
 const DRAIN_BATCH_SIZE = 25;
+/**
+ * Upper bounds on a publish payload. Comfortably above any real platform's own
+ * limit (the providers enforce exact caps), these reject abusive oversized
+ * requests before they reach a provider or the database.
+ */
+const MAX_CONTENT_CHARS = 10_000;
+const MAX_MEDIA_URLS = 10;
 
 /**
  * Orchestrates connecting social accounts (OAuth) and publishing/scheduling
@@ -320,6 +327,16 @@ export class SocialService {
     }
     if (!capabilities.requiresMedia && content.length === 0) {
       throw new BadRequestException(`${name} posts need some text content.`);
+    }
+    if (content.length > MAX_CONTENT_CHARS) {
+      throw new BadRequestException(
+        `Post content is too long (max ${MAX_CONTENT_CHARS.toLocaleString()} characters).`,
+      );
+    }
+    if (mediaUrls.length > MAX_MEDIA_URLS) {
+      throw new BadRequestException(
+        `Too many media items (max ${MAX_MEDIA_URLS}).`,
+      );
     }
   }
 

@@ -132,6 +132,30 @@ describe('SocialService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it.each<{ label: string; content: string; media: string[] }>([
+      {
+        label: 'content over the length cap',
+        content: 'x'.repeat(10_001),
+        media: [],
+      },
+      {
+        label: 'too many media items',
+        content: 'a caption',
+        media: Array.from({ length: 11 }, (_, i) => `https://cdn/${i}.jpg`),
+      },
+    ])('linkedin rejects $label', async ({ content, media }) => {
+      prisma.socialConnection.findFirst.mockResolvedValue(
+        connectionRow({ platform: 'linkedin' }),
+      );
+      await expect(
+        service.publish('user-1', {
+          platform: 'linkedin',
+          content,
+          mediaUrls: media,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('rejects an unsupported platform', async () => {
       await expect(
         service.publish('user-1', { platform: 'myspace', content: 'hi' }),

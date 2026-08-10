@@ -6,7 +6,7 @@ import {
   type UsageSummary,
 } from '@org/shared';
 import { motion } from 'framer-motion';
-import { CreditCard, Loader2, Sparkles, Zap } from 'lucide-react';
+import { AlertCircle, CreditCard, Loader2, Sparkles, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -23,18 +23,25 @@ interface PlanState {
 export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
   const [state, setState] = useState<PlanState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [portalPending, setPortalPending] = useState(false);
 
   const load = useCallback(async () => {
+    setError(false);
     try {
       const [usageRes, subRes] = await Promise.all([
         fetch('/api/usage', { cache: 'no-store' }),
         fetch('/api/billing/subscription', { cache: 'no-store' }),
       ]);
-      if (!usageRes.ok || !subRes.ok) return;
+      if (!usageRes.ok || !subRes.ok) {
+        setError(true);
+        return;
+      }
       const usage = (await usageRes.json()) as UsageSummary;
       const subscription = (await subRes.json()) as SubscriptionView;
       setState({ usage, subscription });
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -64,7 +71,26 @@ export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
       <div className="glass flex h-[92px] animate-pulse items-center gap-3 px-6" />
     );
   }
-  if (!state) return null;
+  if (!state) {
+    if (!error) return null;
+    return (
+      <div className="glass flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex items-center gap-2 text-sm text-amber-300">
+          <AlertCircle className="h-4 w-4 flex-none" />
+          <span>Couldn&apos;t load your plan and usage.</span>
+        </div>
+        <button
+          onClick={() => {
+            setLoading(true);
+            void load();
+          }}
+          className="inline-flex flex-none items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   const { usage, subscription } = state;
   const plan = getPlan(usage.plan);

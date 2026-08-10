@@ -11,6 +11,13 @@ import { SourceResolverService } from './source-resolver.service';
 /** Whether the user supplied a link or pasted raw text. */
 export type SourceType = 'url' | 'text';
 
+/**
+ * Upper bound on a raw source string. Fetched article bodies are already capped
+ * downstream, but pasted text goes straight to the model, so this guards against
+ * oversized payloads inflating token cost and request memory.
+ */
+const MAX_SOURCE_CHARS = 50_000;
+
 @Injectable()
 export class RepurposeService {
   constructor(
@@ -41,6 +48,11 @@ export class RepurposeService {
     const trimmed = (source ?? '').trim();
     if (trimmed.length === 0) {
       throw new BadRequestException('A URL or text source is required.');
+    }
+    if (trimmed.length > MAX_SOURCE_CHARS) {
+      throw new BadRequestException(
+        `Source is too long (max ${MAX_SOURCE_CHARS.toLocaleString()} characters). Trim it down or link to the full article.`,
+      );
     }
     return trimmed;
   }

@@ -55,6 +55,11 @@ describe('SourceResolverService', () => {
       { label: 'link-local metadata', url: 'http://169.254.169.254/latest/meta-data' },
       { label: '.internal host', url: 'http://db.internal/' },
       { label: '.local host', url: 'http://printer.local/' },
+      { label: 'ipv6 loopback', url: 'http://[::1]:3000/' },
+      { label: 'ipv6 unspecified', url: 'http://[::]/' },
+      { label: 'ipv6 unique-local', url: 'http://[fd00::1]/' },
+      { label: 'ipv6 link-local', url: 'http://[fe80::1]/' },
+      { label: 'ipv4-mapped loopback', url: 'http://[::ffff:127.0.0.1]/' },
     ])('rejects a $label url', async ({ url }) => {
       await expect(service.resolve(url, 'url')).rejects.toBeInstanceOf(
         BadRequestException,

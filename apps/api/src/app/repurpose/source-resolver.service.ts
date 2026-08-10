@@ -141,16 +141,34 @@ export class SourceResolverService {
       throw new BadRequestException('That does not look like a valid URL.');
     }
 
+    // WHATWG URL wraps IPv6 literals in brackets; strip them for matching.
+    const host = hostname.replace(/^\[|\]$/g, '');
+    const isIpv6 = host.includes(':');
+    // IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1) — inspect the embedded IPv4 too.
+    const mappedIpv4 = host.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/)?.[1];
+    const ipv4 = mappedIpv4 ?? host;
+
+    const blockedIpv4 =
+      ipv4 === '0.0.0.0' ||
+      /^127\./.test(ipv4) ||
+      /^10\./.test(ipv4) ||
+      /^192\.168\./.test(ipv4) ||
+      /^169\.254\./.test(ipv4) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(ipv4);
+
+    const blockedIpv6 =
+      isIpv6 &&
+      (host === '::1' || // loopback
+        host === '::' || // unspecified
+        /^f[cd]/.test(host) || // unique local fc00::/7
+        /^fe[89ab]/.test(host)); // link-local fe80::/10
+
     const blocked =
-      hostname === 'localhost' ||
-      hostname === '0.0.0.0' ||
-      hostname.endsWith('.local') ||
-      hostname.endsWith('.internal') ||
-      /^127\./.test(hostname) ||
-      /^10\./.test(hostname) ||
-      /^192\.168\./.test(hostname) ||
-      /^169\.254\./.test(hostname) ||
-      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
+      host === 'localhost' ||
+      host.endsWith('.local') ||
+      host.endsWith('.internal') ||
+      blockedIpv4 ||
+      blockedIpv6;
 
     if (blocked) {
       throw new BadRequestException('That URL host is not allowed.');

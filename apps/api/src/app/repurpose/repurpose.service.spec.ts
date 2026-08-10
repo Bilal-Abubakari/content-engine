@@ -61,8 +61,17 @@ describe('RepurposeService', () => {
       { label: 'whitespace only', input: '   ' },
       { label: 'null', input: null },
       { label: 'undefined', input: undefined },
+      { label: 'over the length cap', input: 'x'.repeat(50_001) },
     ])('throws BadRequestException for $label', ({ input }) => {
       expect(() => service.validateSource(input)).toThrow(BadRequestException);
+    });
+
+    it.each<{ label: string; length: number }>([
+      { label: 'exactly at the cap', length: 50_000 },
+      { label: 'just under the cap', length: 49_999 },
+    ])('accepts a source $label', ({ length }) => {
+      const input = 'x'.repeat(length);
+      expect(service.validateSource(input)).toBe(input);
     });
 
     it.each<{ input: string; expected: string }>([

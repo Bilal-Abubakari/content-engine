@@ -1,7 +1,7 @@
 'use client';
 
 import type { RepurposeHistoryItem } from '@org/shared';
-import { Clock, FileText, Link2, Loader2 } from 'lucide-react';
+import { AlertCircle, Clock, FileText, Link2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
@@ -15,6 +15,7 @@ import { Hint } from '../tour/hint';
 export function HistoryView() {
   const [items, setItems] = useState<RepurposeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -24,6 +25,7 @@ export function HistoryView() {
           cache: 'no-store',
         });
         if (!res.ok) {
+          if (active) setError(true);
           return;
         }
         const data = (await res.json()) as RepurposeHistoryItem[];
@@ -31,7 +33,7 @@ export function HistoryView() {
           setItems(data);
         }
       } catch {
-        /* ignore — the list simply stays empty */
+        if (active) setError(true);
       } finally {
         if (active) {
           setLoading(false);
@@ -73,6 +75,11 @@ export function HistoryView() {
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
+          </div>
+        ) : error ? (
+          <div className="flex items-center gap-2 text-sm text-amber-300">
+            <AlertCircle className="h-4 w-4 flex-none" />
+            Couldn&apos;t load your history. Refresh the page to try again.
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-slate-500">
