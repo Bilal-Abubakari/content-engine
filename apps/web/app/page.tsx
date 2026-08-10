@@ -1,3 +1,4 @@
+import { Comparison } from '@/components/landing/comparison';
 import { Cta } from '@/components/landing/cta';
 import { Faq } from '@/components/landing/faq';
 import { Features } from '@/components/landing/features';
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <SocialProof />
       <HowItWorks />
       <Features />
+      <Comparison />
       <Pricing />
       <Testimonials />
       <Faq />

@@ -17,6 +17,11 @@ const FAQS: QA[] = [
       'Yes. The Free plan gives you 5 repurposes every month with access to every output format — no credit card required.',
   },
   {
+    question: 'Why use this instead of ChatGPT, Gemini, or Claude?',
+    answer:
+      'Those tools are great, and ContentEngine is built on top of frontier models. The difference is the workflow: one paste turns your idea into tweets, LinkedIn, Facebook, a newsletter, a thread, plus Instagram and TikTok drafts all at once — each formatted for how people actually read on that platform. It reads your URL or transcript for you, remembers your brand tone and preferred formats, and lets you publish straight to LinkedIn, X, and Facebook. No prompt writing, no copy-paste between a dozen chats.',
+  },
+  {
     question: 'What counts as one repurpose?',
     answer:
       'Each source you submit (a URL or a block of text) counts as one repurpose, and returns tweets, LinkedIn and Facebook posts, a newsletter draft, a thread, plus Instagram and TikTok drafts — all at once.',
