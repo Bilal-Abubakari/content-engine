@@ -57,20 +57,27 @@ export class RepurposeController {
     @Body() body: RepurposeRequestDto,
   ): Promise<RepurposeResponse> {
     const userId = this.userId(req);
-    await this.usage.assertWithinLimit(userId);
+    // Validate the input before claiming a slot so bad requests cost nothing.
     const source = this.repurposeService.validateSource(body.source);
     const sourceType = this.repurposeService.detectSourceType(source);
     const settings = await this.settings.get(userId);
     const options = this.resolveOptions(settings, body);
-    const result = await this.repurposeService.repurpose(source, options);
-    await this.usage.increment(userId);
-    const id = await this.historyService.record(
-      userId,
-      source,
-      sourceType,
-      result.content,
-    );
-    return { id, ...result };
+    // Atomically claim a quota slot up front (throws 429 if over the limit),
+    // then release it if the generation fails so failures don't cost the user.
+    await this.usage.reserve(userId);
+    try {
+      const result = await this.repurposeService.repurpose(source, options);
+      const id = await this.historyService.record(
+        userId,
+        source,
+        sourceType,
+        result.content,
+      );
+      return { id, ...result };
+    } catch (err) {
+      await this.usage.refund(userId);
+      throw err;
+    }
   }
 
   /**

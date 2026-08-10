@@ -6,14 +6,22 @@ import { UsageService } from './usage.service';
 describe('UsageService', () => {
   let prisma: {
     subscription: { findUnique: jest.Mock };
-    usageRecord: { findUnique: jest.Mock; upsert: jest.Mock };
+    usageRecord: {
+      findUnique: jest.Mock;
+      upsert: jest.Mock;
+      updateMany: jest.Mock;
+    };
   };
   let service: UsageService;
 
   beforeEach(() => {
     prisma = {
       subscription: { findUnique: jest.fn() },
-      usageRecord: { findUnique: jest.fn(), upsert: jest.fn() },
+      usageRecord: {
+        findUnique: jest.fn(),
+        upsert: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
     };
     service = new UsageService(prisma as unknown as PrismaService);
   });
@@ -54,37 +62,51 @@ describe('UsageService', () => {
     });
   });
 
-  describe('assertWithinLimit', () => {
-    it.each<{ plan: string; used: number }>([
-      { plan: 'free', used: 5 },
-      { plan: 'free', used: 6 },
-      { plan: 'pro', used: 300 },
+  describe('reserve', () => {
+    // `newCount` is the running total AFTER the atomic claim increment.
+    it.each<{ plan: string; newCount: number }>([
+      { plan: 'free', newCount: 6 },
+      { plan: 'pro', newCount: 301 },
     ])(
-      'throws 429 when $plan usage $used is at/over the limit',
-      async ({ plan, used }) => {
+      'throws 429 and releases the slot when $plan claim $newCount exceeds the limit',
+      async ({ plan, newCount }) => {
         prisma.subscription.findUnique.mockResolvedValue({ plan });
-        prisma.usageRecord.findUnique.mockResolvedValue({ count: used });
-        await expect(service.assertWithinLimit('user_1')).rejects.toBeInstanceOf(
+        prisma.usageRecord.upsert.mockResolvedValue({ count: newCount });
+        await expect(service.reserve('user_1')).rejects.toBeInstanceOf(
           HttpException,
         );
+        // The over-claim is undone so the counter never drifts above the limit.
+        expect(prisma.usageRecord.updateMany).toHaveBeenCalledWith({
+          where: { userId: 'user_1', period: expect.any(String), count: { gt: 0 } },
+          data: { count: { decrement: 1 } },
+        });
       },
     );
 
-    it.each<{ plan: string; used: number }>([
-      { plan: 'free', used: 0 },
-      { plan: 'free', used: 4 },
-      { plan: 'pro', used: 299 },
-      { plan: 'team', used: 100000 },
+    it.each<{ plan: string; newCount: number }>([
+      { plan: 'free', newCount: 1 },
+      { plan: 'free', newCount: 5 },
+      { plan: 'pro', newCount: 300 },
+      { plan: 'team', newCount: 100000 },
     ])(
-      'allows $plan usage $used below the limit',
-      async ({ plan, used }) => {
+      'keeps the claimed slot when $plan claim $newCount is within the limit',
+      async ({ plan, newCount }) => {
         prisma.subscription.findUnique.mockResolvedValue({ plan });
-        prisma.usageRecord.findUnique.mockResolvedValue({ count: used });
-        await expect(
-          service.assertWithinLimit('user_1'),
-        ).resolves.toBeUndefined();
+        prisma.usageRecord.upsert.mockResolvedValue({ count: newCount });
+        await expect(service.reserve('user_1')).resolves.toBe(newCount);
+        expect(prisma.usageRecord.updateMany).not.toHaveBeenCalled();
       },
     );
+  });
+
+  describe('refund', () => {
+    it('decrements the counter only while it is above zero', async () => {
+      await service.refund('user_1', '2026-08');
+      expect(prisma.usageRecord.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user_1', period: '2026-08', count: { gt: 0 } },
+        data: { count: { decrement: 1 } },
+      });
+    });
   });
 
   describe('getSummary', () => {

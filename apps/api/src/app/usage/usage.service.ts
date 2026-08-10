@@ -4,7 +4,6 @@ import {
   DEFAULT_PLAN_ID,
   getPlan,
   isPlanId,
-  isWithinGenerationLimit,
   type PlanId,
   type UsageSummary,
 } from '@org/shared';
@@ -63,18 +62,45 @@ export class UsageService {
   }
 
   /**
-   * Throw HTTP 429 when the user has no generations left this month. Called
-   * before doing the (expensive) work so we never generate beyond the quota.
+   * Atomically claim one generation slot for this month, throwing HTTP 429 if
+   * that would exceed the plan's quota. Unlike a separate read-then-write check,
+   * the claim IS the increment: Postgres holds a row lock for the duration of
+   * the increment, so concurrent requests serialize and can't both read an
+   * under-limit count and both slip past. If the claim overshoots the limit we
+   * release it again before rejecting, so the counter never drifts above it.
+   *
+   * Call {@link refund} if the work the slot was claimed for ultimately fails,
+   * so a failed generation doesn't cost the user a slot.
    */
-  async assertWithinLimit(userId: string): Promise<void> {
+  async reserve(userId: string): Promise<number> {
     const plan = await this.planFor(userId);
-    const used = await this.getUsage(userId);
-    if (!isWithinGenerationLimit(plan, used)) {
+    const limit = getPlan(plan).monthlyGenerationLimit;
+    const period = this.currentPeriod();
+
+    const count = await this.increment(userId, period);
+
+    if (limit !== null && count > limit) {
+      await this.refund(userId, period);
       throw new HttpException(
         `You've reached the monthly limit for the ${getPlan(plan).name} plan. Upgrade to keep repurposing.`,
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
+    return count;
+  }
+
+  /**
+   * Release a previously reserved slot. Guarded so a defensive/duplicate call
+   * can never drive the counter below zero.
+   */
+  async refund(
+    userId: string,
+    period: string = this.currentPeriod(),
+  ): Promise<void> {
+    await this.prisma.usageRecord.updateMany({
+      where: { userId, period, count: { gt: 0 } },
+      data: { count: { decrement: 1 } },
+    });
   }
 
   /** Atomically record one generation and return the new running total. */
