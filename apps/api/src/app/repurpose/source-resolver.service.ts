@@ -6,6 +6,32 @@ import type { SourceType } from './repurpose.service';
 const FETCH_TIMEOUT_MS = 10_000;
 /** Cap how much extracted text we forward to the model. */
 const MAX_CONTENT_CHARS = 12_000;
+/**
+ * Minimum extracted characters before we trust a page actually carried an
+ * article. Real bodies run into the thousands; a JS-app shell or paywall leaves
+ * only a scrap of nav/footer text, which would make the model hallucinate.
+ */
+const MIN_CONTENT_CHARS = 200;
+
+/**
+ * Platforms whose real content (video, audio, or a login-walled JS feed) is not
+ * present in the HTML we can fetch server-side. Feeding their page shell to the
+ * model yields nonsense, so we reject these up front with a clear message.
+ * Keyed by registrable domain and matched against the host and any subdomain
+ * (so `m.youtube.com` matches `youtube.com`).
+ */
+const UNSUPPORTED_SOURCES: ReadonlyArray<{ domain: string; label: string }> = [
+  { domain: 'youtube.com', label: 'YouTube' },
+  { domain: 'youtu.be', label: 'YouTube' },
+  { domain: 'vimeo.com', label: 'Vimeo' },
+  { domain: 'tiktok.com', label: 'TikTok' },
+  { domain: 'instagram.com', label: 'Instagram' },
+  { domain: 'facebook.com', label: 'Facebook' },
+  { domain: 'twitter.com', label: 'X (Twitter)' },
+  { domain: 'x.com', label: 'X (Twitter)' },
+  { domain: 'spotify.com', label: 'Spotify' },
+  { domain: 'podcasts.apple.com', label: 'Apple Podcasts' },
+];
 
 /**
  * Turns a raw source into the text we actually feed the model. Pasted text is
@@ -26,14 +52,37 @@ export class SourceResolverService {
   private async fetchArticleText(url: string): Promise<string> {
     this.assertFetchable(url);
 
+    const unsupported = SourceResolverService.unsupportedSourceLabel(
+      new URL(url).hostname,
+    );
+    if (unsupported) {
+      throw new BadRequestException(
+        `We can't read ${unsupported} links yet — that content isn't in the page we fetch. Paste the transcript or text directly and we'll repurpose it.`,
+      );
+    }
+
     const html = await this.fetchHtml(url);
     const text = this.extractReadableText(html);
-    if (!text) {
+    if (text.length < MIN_CONTENT_CHARS) {
       throw new BadRequestException(
-        'Could not extract readable text from that URL. Try pasting the text directly.',
+        "We couldn't find enough readable text on that page — it may need JavaScript or a login. Paste the text directly and we'll repurpose it.",
       );
     }
     return text.slice(0, MAX_CONTENT_CHARS);
+  }
+
+  /**
+   * Return a friendly platform name when the host is one whose content we can't
+   * read from server-fetched HTML, otherwise null. Static and pure so the list
+   * can be exhaustively unit-tested. Matches the exact host or any subdomain of
+   * a listed domain.
+   */
+  static unsupportedSourceLabel(hostname: string): string | null {
+    const host = hostname.toLowerCase();
+    const match = UNSUPPORTED_SOURCES.find(
+      ({ domain }) => host === domain || host.endsWith(`.${domain}`),
+    );
+    return match ? match.label : null;
   }
 
   /** Perform the HTTP GET with a timeout and content-type check. */
