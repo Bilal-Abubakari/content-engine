@@ -12,6 +12,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
+  CalendarClock,
   Clock,
   Link2,
   Loader2,
@@ -148,6 +149,13 @@ export function Dashboard({
             >
               <Clock className="h-4 w-4" />
               History
+            </Link>
+            <Link
+              href="/dashboard/scheduled"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+            >
+              <CalendarClock className="h-4 w-4" />
+              Scheduled
             </Link>
             <Link
               href="/dashboard/settings"

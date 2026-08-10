@@ -220,6 +220,35 @@ export class SocialService {
     return due.length;
   }
 
+  /** The user's still-pending scheduled posts, soonest first. */
+  async listScheduledPosts(userId: string): Promise<SocialPostView[]> {
+    const rows = await this.prisma.socialPost.findMany({
+      where: { userId, status: PublishStatus.scheduled },
+      orderBy: { scheduledFor: 'asc' },
+    });
+    return rows.map((row) => this.toPostView(row, null));
+  }
+
+  /**
+   * Cancel a scheduled post before it is delivered. Only the owner may cancel,
+   * and only while it is still `scheduled` — a post that has already published
+   * (or is mid-flight) can't be pulled back.
+   */
+  async cancelScheduledPost(userId: string, postId: string): Promise<void> {
+    const post = await this.prisma.socialPost.findUnique({
+      where: { id: postId },
+    });
+    if (!post || post.userId !== userId) {
+      throw new NotFoundException('Scheduled post not found.');
+    }
+    if (post.status !== PublishStatus.scheduled) {
+      throw new BadRequestException(
+        'Only scheduled posts that have not published yet can be cancelled.',
+      );
+    }
+    await this.prisma.socialPost.delete({ where: { id: postId } });
+  }
+
   /**
    * Execute the actual platform call and record the outcome on the row. Returns
    * the updated row plus the provider's permalink (only the provider knows it,

@@ -24,6 +24,7 @@ interface PrismaMock {
     findMany: jest.Mock;
     findUnique: jest.Mock;
     update: jest.Mock;
+    delete: jest.Mock;
   };
 }
 
@@ -41,6 +42,7 @@ function makePrismaMock(): PrismaMock {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
   };
 }
@@ -279,6 +281,73 @@ describe('SocialService', () => {
       const count = await service.drainDuePosts(now);
       expect(count).toBe(2);
       expect(prisma.socialPost.update).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('listScheduledPosts', () => {
+    it('returns the user\'s scheduled posts as views, soonest first', async () => {
+      const soon = new Date(Date.now() + 3_600_000);
+      prisma.socialPost.findMany.mockResolvedValue([
+        postRow({ id: 'p1', status: 'scheduled', scheduledFor: soon }),
+      ]);
+
+      const result = await service.listScheduledPosts('user-1');
+
+      expect(prisma.socialPost.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', status: 'scheduled' },
+        orderBy: { scheduledFor: 'asc' },
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: 'p1',
+        status: 'scheduled',
+        scheduledFor: soon.toISOString(),
+        url: null,
+      });
+    });
+  });
+
+  describe('cancelScheduledPost', () => {
+    it.each<{ label: string; row: Record<string, unknown> | null }>([
+      { label: 'the post does not exist', row: null },
+      {
+        label: 'the post belongs to another user',
+        row: { status: 'scheduled', userId: 'other-user' },
+      },
+    ])('throws NotFound when $label', async ({ row }) => {
+      prisma.socialPost.findUnique.mockResolvedValue(
+        row ? postRow(row) : null,
+      );
+      await expect(
+        service.cancelScheduledPost('user-1', 'post-1'),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.socialPost.delete).not.toHaveBeenCalled();
+    });
+
+    it.each<{ status: string }>([
+      { status: 'publishing' },
+      { status: 'published' },
+      { status: 'failed' },
+    ])(
+      'refuses to cancel a $status post',
+      async ({ status }) => {
+        prisma.socialPost.findUnique.mockResolvedValue(postRow({ status }));
+        await expect(
+          service.cancelScheduledPost('user-1', 'post-1'),
+        ).rejects.toThrow(BadRequestException);
+        expect(prisma.socialPost.delete).not.toHaveBeenCalled();
+      },
+    );
+
+    it('deletes a scheduled post the user owns', async () => {
+      prisma.socialPost.findUnique.mockResolvedValue(
+        postRow({ status: 'scheduled' }),
+      );
+      prisma.socialPost.delete.mockResolvedValue(postRow());
+      await service.cancelScheduledPost('user-1', 'post-1');
+      expect(prisma.socialPost.delete).toHaveBeenCalledWith({
+        where: { id: 'post-1' },
+      });
     });
   });
 });

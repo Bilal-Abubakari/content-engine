@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ExternalLink, Eye, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { resolveSchedule, type ScheduleMode } from '@/lib/schedule';
 import { uploadMedia } from '@/lib/upload-media';
 import { Hint } from '../tour/hint';
 import {
@@ -21,6 +22,7 @@ import {
 } from './build-cards';
 import { ContentCard } from './content-card';
 import { PreviewModal } from './preview-modal';
+import { ScheduleControl, formatScheduledFor } from './schedule-control';
 
 /** A published post's platform name and permalink, if one was returned. */
 interface PublishedLink {
@@ -129,6 +131,10 @@ export function ResultsGrid({
   const [previewPlatform, setPreviewPlatform] = useState<SocialPlatform>('x');
   const [publishingAll, setPublishingAll] = useState(false);
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
+  // Shared schedule for "Publish all": every target gets the same time.
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('now');
+  const [scheduleAt, setScheduleAt] = useState('');
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
   // Load the user's connected accounts so cards can offer one-click publishing.
   useEffect(() => {
@@ -171,6 +177,13 @@ export function ResultsGrid({
   });
 
   async function handlePublishAll() {
+    // Resolve the shared schedule up front; a bad time blocks the whole run.
+    const schedule = resolveSchedule(scheduleMode, scheduleAt);
+    if (!schedule.ok) {
+      setScheduleError(schedule.error);
+      return;
+    }
+    setScheduleError(null);
     setPublishingAll(true);
     setBulkResult(null);
 
@@ -189,6 +202,7 @@ export function ResultsGrid({
             mediaUrls: mediaForPlatform(connection.platform).map(
               (item) => item.url,
             ),
+            ...(schedule.iso ? { scheduledFor: schedule.iso } : {}),
           }),
         });
         if (!res.ok) {
@@ -203,17 +217,20 @@ export function ResultsGrid({
 
     setPublishingAll(false);
     const names = succeeded.map((s) => s.name).join(', ');
+    // Scheduled runs return no permalink, so describe them as queued instead.
+    const verb = schedule.iso
+      ? `Scheduled for ${formatScheduledFor(schedule.iso)}`
+      : 'Posted to';
+    const okText = schedule.iso
+      ? `${verb} · ${names}.`
+      : `Posted to ${names}.`;
     if (failed.length === 0) {
-      setBulkResult({
-        kind: 'success',
-        text: `Posted to ${names}.`,
-        links: succeeded,
-      });
+      setBulkResult({ kind: 'success', text: okText, links: succeeded });
     } else {
       setBulkResult({
         kind: 'error',
         text: succeeded.length
-          ? `Posted to ${names} · failed for ${failed.join(', ')}.`
+          ? `${okText.replace(/\.$/, '')} · failed for ${failed.join(', ')}.`
           : `Publish failed for ${failed.join(', ')}.`,
         links: succeeded,
       });
@@ -248,11 +265,35 @@ export function ResultsGrid({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Publish all ({publishTargets.length})
+              {scheduleMode === 'later' ? 'Schedule all' : 'Publish all'} (
+              {publishTargets.length})
             </button>
           )}
         </div>
       </div>
+
+      {publishTargets.length > 0 && (
+        <div className="glass mb-6 flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-xs font-medium text-slate-400">
+            When should &ldquo;Publish all&rdquo; go out?
+          </span>
+          <div className="sm:w-64">
+            <ScheduleControl
+              mode={scheduleMode}
+              value={scheduleAt}
+              error={scheduleError}
+              onModeChange={(mode) => {
+                setScheduleMode(mode);
+                setScheduleError(null);
+              }}
+              onValueChange={(value) => {
+                setScheduleAt(value);
+                setScheduleError(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {connectionsLoaded && connections.length === 0 && (
         <Hint

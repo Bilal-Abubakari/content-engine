@@ -105,6 +105,25 @@ export class SocialController {
     });
   }
 
+  /** GET /api/social/scheduled — the user's pending scheduled posts. */
+  @Get('scheduled')
+  async scheduled(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<SocialPostView[]> {
+    return this.social.listScheduledPosts(this.userId(req));
+  }
+
+  /** DELETE /api/social/scheduled/:id — cancel a not-yet-published post. */
+  @Delete('scheduled/:id')
+  @HttpCode(HttpStatus.OK)
+  async cancelScheduled(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<{ ok: true }> {
+    await this.social.cancelScheduledPost(this.userId(req), id);
+    return { ok: true };
+  }
+
   /** Extract the verified user id or reject the request. */
   private userId(req: AuthenticatedRequest): string {
     const sub = req.user?.sub;

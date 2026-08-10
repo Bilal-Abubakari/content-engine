@@ -23,7 +23,9 @@ import {
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useState } from 'react';
+import { resolveSchedule, type ScheduleMode } from '@/lib/schedule';
 import { MediaAttachments } from './media-attachments';
+import { ScheduleControl, formatScheduledFor } from './schedule-control';
 
 export interface ContentCardProps {
   title: string;
@@ -92,6 +94,11 @@ export function ContentCard({
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState('');
   const [draftItems, setDraftItems] = useState<string[]>([]);
+  // Publish menu scheduling: 'now' fires immediately, 'later' queues for the
+  // chosen time. Owned here so the resolved ISO reaches handlePublish on click.
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('now');
+  const [scheduleAt, setScheduleAt] = useState('');
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
   // List-style cards (tweets / thread) edit a set of entries; the rest edit a
   // single text block.
@@ -157,6 +164,14 @@ export function ContentCard({
   }
 
   async function handlePublish(platform: SocialPlatform) {
+    // Validate the schedule before firing so a bad time keeps the menu open
+    // with an inline hint instead of silently posting now.
+    const schedule = resolveSchedule(scheduleMode, scheduleAt);
+    if (!schedule.ok) {
+      setScheduleError(schedule.error);
+      return;
+    }
+    setScheduleError(null);
     setMenuOpen(false);
     setPublishing(platform);
     setToast(null);
@@ -169,6 +184,7 @@ export function ContentCard({
           platform,
           content: copyPayload,
           mediaUrls: media.map((item) => item.url),
+          ...(schedule.iso ? { scheduledFor: schedule.iso } : {}),
         }),
       });
       if (!res.ok) {
@@ -180,17 +196,21 @@ export function ContentCard({
       const post = (await res.json()) as {
         status: string;
         url: string | null;
+        scheduledFor: string | null;
       };
       const name = PLATFORM_CATALOGUE[platform].name;
       const published = post.status === 'published';
+      const scheduledText = post.scheduledFor
+        ? `Scheduled for ${name} · ${formatScheduledFor(post.scheduledFor)}`
+        : `Queued for ${name}`;
       setToast({
         kind: 'success',
-        text: published ? `Posted to ${name}` : `Queued for ${name}`,
+        text: published ? `Posted to ${name}` : scheduledText,
         url: published ? post.url : null,
       });
       // Keep the banner up when there's a link to act on; otherwise fade it.
       if (!published || !post.url) {
-        setTimeout(() => setToast(null), 2600);
+        setTimeout(() => setToast(null), 3200);
       }
     } catch (err) {
       setToast({
@@ -259,7 +279,10 @@ export function ContentCard({
               {!comingSoon && publishTargets.length > 0 && (
             <div className="relative">
               <button
-                onClick={() => setMenuOpen((open) => !open)}
+                onClick={() => {
+                  setScheduleError(null);
+                  setMenuOpen((open) => !open);
+                }}
                 disabled={publishing !== null}
                 aria-label={`Publish ${title} content`}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
@@ -279,8 +302,28 @@ export function ContentCard({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-xl"
+                    className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-xl"
                   >
+                    <li className="border-b border-white/10 p-2">
+                      <ScheduleControl
+                        mode={scheduleMode}
+                        value={scheduleAt}
+                        error={scheduleError}
+                        onModeChange={(mode) => {
+                          setScheduleMode(mode);
+                          setScheduleError(null);
+                        }}
+                        onValueChange={(value) => {
+                          setScheduleAt(value);
+                          setScheduleError(null);
+                        }}
+                      />
+                      <p className="mt-1.5 px-0.5 text-[11px] text-slate-500">
+                        {scheduleMode === 'now'
+                          ? 'Choose a platform to post now.'
+                          : 'Choose a platform to schedule.'}
+                      </p>
+                    </li>
                     {publishTargets.map((connection) => {
                       const meta = PLATFORM_CATALOGUE[connection.platform];
                       return (
