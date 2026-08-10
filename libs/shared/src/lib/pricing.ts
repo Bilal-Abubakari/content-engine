@@ -31,8 +31,6 @@ export interface PlanConfig {
    * `null` means unlimited (fair use).
    */
   monthlyGenerationLimit: number | null;
-  /** Number of member seats included. */
-  seats: number;
   /** Human-readable feature bullets for the pricing card. */
   features: string[];
   /** Highlight this plan as the recommended option in the UI. */
@@ -47,7 +45,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     priceMonthly: 0,
     priceYearly: 0,
     monthlyGenerationLimit: 5,
-    seats: 1,
     features: [
       '5 repurposes per month',
       'Tweets, LinkedIn, newsletter & threads',
@@ -63,11 +60,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     priceMonthly: 1900,
     priceYearly: 19000,
     monthlyGenerationLimit: 300,
-    seats: 1,
     features: [
       '300 repurposes per month',
       'Everything in Free',
-      'Priority generation queue',
       'Content history & re-editing',
       'Email support',
     ],
@@ -75,17 +70,14 @@ export const PLANS: Record<PlanId, PlanConfig> = {
   },
   team: {
     id: 'team',
-    name: 'Team',
-    tagline: 'For teams running content at scale.',
+    name: 'Scale',
+    tagline: 'For high-volume creators publishing every day.',
     priceMonthly: 4900,
     priceYearly: 49000,
     monthlyGenerationLimit: null,
-    seats: 5,
     features: [
       'Unlimited repurposes (fair use)',
       'Everything in Pro',
-      'Up to 5 team seats',
-      'Shared team workspace',
       'Priority support',
     ],
     highlighted: false,

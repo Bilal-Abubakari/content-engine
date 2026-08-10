@@ -86,7 +86,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'Instagram',
     accent: 'from-fuchsia-500 to-orange-500',
     capabilities: { text: false, image: true, video: true, requiresMedia: true },
-    comingSoon: false,
+    comingSoon: true,
     note: 'Business/Creator account only. Attach an image or video to every post.',
   },
   tiktok: {
@@ -94,7 +94,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'TikTok',
     accent: 'from-slate-200 to-slate-400',
     capabilities: { text: false, image: false, video: true, requiresMedia: true },
-    comingSoon: false,
+    comingSoon: true,
     note: 'Video posts only — attach a video to publish.',
   },
 };
