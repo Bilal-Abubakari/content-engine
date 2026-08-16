@@ -58,7 +58,9 @@ describe('InstagramProvider', () => {
     ])('$name', async ({ expiresIn, expectExpiry }) => {
       const before = Date.now();
       mockFetchSequence([
-        json({ access_token: 'short', user_id: 178414, permissions: SCOPES }),
+        json({
+          data: [{ access_token: 'short', user_id: 178414, permissions: SCOPES }],
+        }),
         json({
           access_token: 'long-lived',
           token_type: 'bearer',
@@ -89,7 +91,7 @@ describe('InstagramProvider', () => {
 
     it('posts the code then upgrades to a long-lived token', async () => {
       const fetchMock = mockFetchSequence([
-        json({ access_token: 'short', user_id: 1 }),
+        json({ data: [{ access_token: 'short', user_id: 1 }] }),
         json({ access_token: 'long-lived', expires_in: 5184000 }),
         json({ username: 'jane' }),
       ]);
@@ -116,6 +118,33 @@ describe('InstagramProvider', () => {
       expect(longUrl).toContain('https://graph.instagram.com/access_token');
       expect(longUrl).toContain('grant_type=ig_exchange_token');
       expect(longUrl).toContain('access_token=short');
+    });
+
+    it('throws when the token exchange returns no account', async () => {
+      mockFetchSequence([json({ data: [] })]);
+      await expect(
+        new InstagramProvider('id', 'secret').exchangeCode({
+          code: 'c',
+          redirectUri: 'https://app.test/cb',
+        }),
+      ).rejects.toThrow('returned no account');
+    });
+
+    it('still connects when the username lookup fails', async () => {
+      mockFetchSequence([
+        json({ data: [{ access_token: 'short', user_id: 178414 }] }),
+        json({ access_token: 'long-lived', expires_in: 5184000 }),
+        json({ error: 'nope' }, 400),
+      ]);
+
+      const account = await new InstagramProvider('id', 'secret').exchangeCode({
+        code: 'c',
+        redirectUri: 'https://app.test/cb',
+      });
+
+      expect(account.externalAccountId).toBe('178414');
+      expect(account.displayName).toBeUndefined();
+      expect(account.tokens.accessToken).toBe('long-lived');
     });
   });
 

@@ -19,11 +19,16 @@ const SCOPES = 'instagram_business_basic,instagram_business_content_publish';
 /** File extensions treated as video (published as a Reel); else an image. */
 const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm'];
 
-/** Response from the short-lived authorization-code exchange. */
+/**
+ * Response from the short-lived authorization-code exchange. The Instagram
+ * Business Login endpoint wraps the token in a single-element `data` array.
+ */
 interface ShortLivedTokenResponse {
-  access_token: string;
-  user_id: string | number;
-  permissions?: string;
+  data: {
+    access_token: string;
+    user_id: string | number;
+    permissions?: string;
+  }[];
 }
 
 /** Response from the long-lived token exchange / refresh. */
@@ -103,8 +108,12 @@ export class InstagramProvider implements SocialProvider {
       'Instagram token exchange',
     );
 
-    const igUserId = String(short.user_id);
-    const long = await this.exchangeForLongLived(short.access_token);
+    const entry = short.data[0];
+    if (!entry) {
+      throw new Error('Instagram token exchange returned no account.');
+    }
+    const igUserId = String(entry.user_id);
+    const long = await this.exchangeForLongLived(entry.access_token);
     const profile = await this.fetchProfile(long.access_token);
 
     return {
@@ -249,15 +258,20 @@ export class InstagramProvider implements SocialProvider {
     );
   }
 
+  /** Best-effort username lookup; the connection still works without it. */
   private async fetchProfile(accessToken: string): Promise<ProfileResponse> {
-    const url = new URL(`${GRAPH}/me`);
-    url.searchParams.set('fields', 'user_id,username');
-    url.searchParams.set('access_token', accessToken);
-    return requestJson<ProfileResponse>(
-      url.toString(),
-      { method: 'GET' },
-      'Instagram profile fetch',
-    );
+    try {
+      const url = new URL(`${GRAPH}/me`);
+      url.searchParams.set('fields', 'user_id,username');
+      url.searchParams.set('access_token', accessToken);
+      return await requestJson<ProfileResponse>(
+        url.toString(),
+        { method: 'GET' },
+        'Instagram profile fetch',
+      );
+    } catch {
+      return {};
+    }
   }
 
   private isVideo(mediaUrl: string): boolean {
