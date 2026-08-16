@@ -60,6 +60,19 @@ describe('SocialService', () => {
     process.env.AUTH_SECRET = 'test-secret-value';
     process.env.SOCIAL_TOKEN_KEY = randomBytes(32).toString('base64');
     process.env.WEB_ORIGIN = 'http://localhost:4200';
+    // Nx auto-loads apps/api/.env, which may carry real provider credentials on
+    // a developer's machine. Clear them so the base suite always exercises the
+    // mock providers; the live-provider describes below opt back in explicitly.
+    for (const key of [
+      'LINKEDIN_CLIENT_ID',
+      'LINKEDIN_CLIENT_SECRET',
+      'X_CLIENT_ID',
+      'X_CLIENT_SECRET',
+      'FACEBOOK_CLIENT_ID',
+      'FACEBOOK_CLIENT_SECRET',
+    ]) {
+      delete process.env[key];
+    }
   });
 
   beforeEach(() => {
@@ -452,6 +465,58 @@ describe('SocialService', () => {
       expect(result.status).toBe('failed');
       expect(result.error).toMatch(/expired.*[Rr]econnect/);
       expect(prisma.socialConnection.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('expired token without refresh (LinkedIn)', () => {
+    // LinkedIn only issues refresh tokens to MDP partners, so a consumer app's
+    // token simply expires. Activating real credentials makes the registry hand
+    // back the live LinkedInProvider (which has no usable refresh token here).
+    beforeAll(() => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-id';
+      process.env.LINKEDIN_CLIENT_SECRET = 'li-secret';
+    });
+    afterAll(() => {
+      delete process.env.LINKEDIN_CLIENT_ID;
+      delete process.env.LINKEDIN_CLIENT_SECRET;
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('marks the post failed with a reconnect prompt and never calls the network', async () => {
+      const connection = connectionRow({
+        platform: 'linkedin',
+        externalAccountId: 'li-ext',
+        accessToken: crypto.encrypt('old-access'),
+        refreshToken: null,
+        scope: 'openid profile w_member_social',
+        expiresAt: new Date(Date.now() - 1000),
+        metadata: { authorUrn: 'urn:li:person:abc' },
+      });
+      const post = postRow({ platform: 'linkedin', content: 'hello' });
+      prisma.socialConnection.findFirst.mockResolvedValue(connection);
+      prisma.socialConnection.findUnique.mockResolvedValue(connection);
+      prisma.socialPost.create.mockResolvedValue(post);
+      prisma.socialPost.findUnique.mockResolvedValue(post);
+      prisma.socialPost.update.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          ...post,
+          ...data,
+        }),
+      );
+      const fetchMock = jest.fn();
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await service.publish('user-1', {
+        platform: 'linkedin',
+        content: 'hello',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/expired.*[Rr]econnect/);
+      expect(prisma.socialConnection.update).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 

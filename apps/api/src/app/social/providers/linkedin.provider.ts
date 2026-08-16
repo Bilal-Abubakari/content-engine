@@ -2,6 +2,7 @@ import type { SocialPlatform } from '@org/shared';
 import { requestJson, requestRaw } from './oauth-http';
 import type {
   ConnectedAccount,
+  OAuthTokens,
   PublishContext,
   PublishResult,
   SocialProvider,
@@ -87,15 +88,43 @@ export class LinkedInProvider implements SocialProvider {
     return {
       externalAccountId: profile.sub,
       displayName: profile.name,
-      tokens: {
-        accessToken: token.access_token,
-        refreshToken: token.refresh_token,
-        scope: token.scope,
-        expiresAt: token.expires_in
-          ? Date.now() + token.expires_in * 1000
-          : undefined,
-      },
+      tokens: this.toTokens(token),
       metadata: { authorUrn: `urn:li:person:${profile.sub}` },
+    };
+  }
+
+  /**
+   * Exchanges a refresh token for a fresh access token. LinkedIn only issues
+   * refresh tokens to approved Marketing Developer Platform partners, so for
+   * most consumer apps this is never invoked; it exists for parity and works if
+   * the app is later approved.
+   */
+  async refresh(refreshToken: string): Promise<OAuthTokens> {
+    const token = await requestJson<TokenResponse>(
+      TOKEN_URL,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+        }),
+      },
+      'LinkedIn token refresh',
+    );
+    return this.toTokens(token);
+  }
+
+  private toTokens(token: TokenResponse): OAuthTokens {
+    return {
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      scope: token.scope,
+      expiresAt: token.expires_in
+        ? Date.now() + token.expires_in * 1000
+        : undefined,
     };
   }
 

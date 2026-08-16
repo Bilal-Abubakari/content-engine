@@ -432,8 +432,14 @@ export class SocialService {
     provider: SocialProvider,
   ): Promise<OAuthTokens> {
     const tokens = this.decryptTokens(connection);
-    if (!this.needsRefresh(tokens) || !tokens.refreshToken || !provider.refresh) {
+    if (!this.needsRefresh(tokens)) {
       return tokens;
+    }
+    // The token is expired (or about to be) but there's nothing to refresh with
+    // — e.g. LinkedIn only issues refresh tokens to MDP partners, so consumer
+    // apps must have the member re-authorize. Signal a reconnect to the caller.
+    if (!tokens.refreshToken || !provider.refresh) {
+      throw new Error('Access token expired and cannot be refreshed.');
     }
     const refreshed = await provider.refresh(tokens.refreshToken);
     await this.persistRefreshedTokens(connection.id, refreshed);
