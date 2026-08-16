@@ -4,6 +4,7 @@ import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
 import { MockProvider } from './mock.provider';
 import { SocialProviderRegistry } from './provider.registry';
+import { TikTokProvider } from './tiktok.provider';
 import { XProvider } from './x.provider';
 
 const CREDS: Record<string, string> = {
@@ -15,6 +16,8 @@ const CREDS: Record<string, string> = {
   FACEBOOK_CLIENT_SECRET: 'fb-secret',
   INSTAGRAM_CLIENT_ID: 'ig-id',
   INSTAGRAM_CLIENT_SECRET: 'ig-secret',
+  TIKTOK_CLIENT_KEY: 'tt-key',
+  TIKTOK_CLIENT_SECRET: 'tt-secret',
 };
 
 describe('SocialProviderRegistry', () => {
@@ -30,6 +33,7 @@ describe('SocialProviderRegistry', () => {
       { platform: 'x', ctor: XProvider },
       { platform: 'facebook', ctor: FacebookProvider },
       { platform: 'instagram', ctor: InstagramProvider },
+      { platform: 'tiktok', ctor: TikTokProvider },
     ],
   )(
     'uses the real provider for $platform when credentials are set',
@@ -59,15 +63,11 @@ describe('SocialProviderRegistry', () => {
         FACEBOOK_CLIENT_SECRET: undefined,
         INSTAGRAM_CLIENT_ID: undefined,
         INSTAGRAM_CLIENT_SECRET: undefined,
+        TIKTOK_CLIENT_KEY: undefined,
+        TIKTOK_CLIENT_SECRET: undefined,
       };
       const registry = new SocialProviderRegistry();
       expect(registry.get(platform)).toBeInstanceOf(MockProvider);
     },
   );
-
-  it('always uses MockProvider for TikTok until its provider lands', () => {
-    process.env = { ...original, ...CREDS };
-    const registry = new SocialProviderRegistry();
-    expect(registry.get('tiktok')).toBeInstanceOf(MockProvider);
-  });
 });

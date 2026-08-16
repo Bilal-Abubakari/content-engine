@@ -43,9 +43,7 @@ export interface PlatformMeta {
   capabilities: PlatformCapabilities;
   /**
    * True while the platform isn't ready for end-to-end use yet. The UI disables
-   * connect/publish and shows a "Coming soon" state. Instagram publishes once
-   * the user attaches their own image/video; TikTok remains pending until its
-   * provider lands.
+   * connect/publish and shows a "Coming soon" state.
    */
   comingSoon: boolean;
   /**
@@ -94,8 +92,8 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'TikTok',
     accent: 'from-slate-200 to-slate-400',
     capabilities: { text: false, image: false, video: true, requiresMedia: true },
-    comingSoon: true,
-    note: 'Video posts only — attach a video to publish.',
+    comingSoon: false,
+    note: 'Video posts only, pulled from a public URL. Unaudited apps can only post privately to the app\u2019s test users.',
   },
 };
 

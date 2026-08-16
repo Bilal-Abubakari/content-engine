@@ -5,6 +5,7 @@ import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
 import { MockProvider } from './mock.provider';
 import type { SocialProvider } from './social-provider';
+import { TikTokProvider } from './tiktok.provider';
 import { XProvider } from './x.provider';
 
 /**
@@ -65,7 +66,12 @@ export class SocialProviderRegistry {
         const secret = env['INSTAGRAM_CLIENT_SECRET'];
         return id && secret ? new InstagramProvider(id, secret) : null;
       }
-      // TikTok has no real provider yet; it falls back to the mock.
+      case 'tiktok': {
+        // TikTok identifies the app with a client key, not a client id.
+        const key = env['TIKTOK_CLIENT_KEY'];
+        const secret = env['TIKTOK_CLIENT_SECRET'];
+        return key && secret ? new TikTokProvider(key, secret) : null;
+      }
       default:
         return null;
     }
