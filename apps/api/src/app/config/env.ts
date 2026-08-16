@@ -60,6 +60,8 @@ const envSchema = z.object({
   X_CLIENT_SECRET: z.string().optional(),
   FACEBOOK_CLIENT_ID: z.string().optional(),
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
+  INSTAGRAM_CLIENT_ID: z.string().optional(),
+  INSTAGRAM_CLIENT_SECRET: z.string().optional(),
   TIKTOK_CLIENT_KEY: z.string().optional(),
   TIKTOK_CLIENT_SECRET: z.string().optional(),
 

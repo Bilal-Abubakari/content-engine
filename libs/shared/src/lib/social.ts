@@ -43,9 +43,9 @@ export interface PlatformMeta {
   capabilities: PlatformCapabilities;
   /**
    * True while the platform isn't ready for end-to-end use yet. The UI disables
-   * connect/publish and shows a "Coming soon" state. All catalogued platforms
-   * are currently live — the media-only ones (Instagram, TikTok) publish once
-   * the user attaches their own image/video.
+   * connect/publish and shows a "Coming soon" state. Instagram publishes once
+   * the user attaches their own image/video; TikTok remains pending until its
+   * provider lands.
    */
   comingSoon: boolean;
   /**
@@ -86,7 +86,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'Instagram',
     accent: 'from-fuchsia-500 to-orange-500',
     capabilities: { text: false, image: true, video: true, requiresMedia: true },
-    comingSoon: true,
+    comingSoon: false,
     note: 'Business/Creator account only. Attach an image or video to every post.',
   },
   tiktok: {

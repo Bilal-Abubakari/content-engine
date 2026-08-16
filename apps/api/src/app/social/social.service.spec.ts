@@ -70,6 +70,8 @@ describe('SocialService', () => {
       'X_CLIENT_SECRET',
       'FACEBOOK_CLIENT_ID',
       'FACEBOOK_CLIENT_SECRET',
+      'INSTAGRAM_CLIENT_ID',
+      'INSTAGRAM_CLIENT_SECRET',
     ]) {
       delete process.env[key];
     }

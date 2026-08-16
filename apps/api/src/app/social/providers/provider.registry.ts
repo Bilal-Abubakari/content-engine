@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { SOCIAL_PLATFORMS, type SocialPlatform } from '@org/shared';
 import { FacebookProvider } from './facebook.provider';
+import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
 import { MockProvider } from './mock.provider';
 import type { SocialProvider } from './social-provider';
@@ -10,9 +11,7 @@ import { XProvider } from './x.provider';
  * Resolves the {@link SocialProvider} for a platform. Each real integration is
  * used only when its OAuth app credentials are configured; otherwise the
  * platform falls back to the built-in {@link MockProvider} so local/demo flows
- * still work end-to-end. Instagram and TikTok always map to the mock — they
- * require media generation that doesn't exist yet and are surfaced as
- * "coming soon" in the UI.
+ * still work end-to-end.
  */
 @Injectable()
 export class SocialProviderRegistry {
@@ -61,7 +60,12 @@ export class SocialProviderRegistry {
         const secret = env['FACEBOOK_CLIENT_SECRET'];
         return id && secret ? new FacebookProvider(id, secret) : null;
       }
-      // Instagram and TikTok require media generation; no real provider yet.
+      case 'instagram': {
+        const id = env['INSTAGRAM_CLIENT_ID'];
+        const secret = env['INSTAGRAM_CLIENT_SECRET'];
+        return id && secret ? new InstagramProvider(id, secret) : null;
+      }
+      // TikTok has no real provider yet; it falls back to the mock.
       default:
         return null;
     }

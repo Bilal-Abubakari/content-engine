@@ -1,5 +1,6 @@
 import type { SocialPlatform } from '@org/shared';
 import { FacebookProvider } from './facebook.provider';
+import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
 import { MockProvider } from './mock.provider';
 import { SocialProviderRegistry } from './provider.registry';
@@ -12,6 +13,8 @@ const CREDS: Record<string, string> = {
   X_CLIENT_SECRET: 'x-secret',
   FACEBOOK_CLIENT_ID: 'fb-id',
   FACEBOOK_CLIENT_SECRET: 'fb-secret',
+  INSTAGRAM_CLIENT_ID: 'ig-id',
+  INSTAGRAM_CLIENT_SECRET: 'ig-secret',
 };
 
 describe('SocialProviderRegistry', () => {
@@ -26,6 +29,7 @@ describe('SocialProviderRegistry', () => {
       { platform: 'linkedin', ctor: LinkedInProvider },
       { platform: 'x', ctor: XProvider },
       { platform: 'facebook', ctor: FacebookProvider },
+      { platform: 'instagram', ctor: InstagramProvider },
     ],
   )(
     'uses the real provider for $platform when credentials are set',
@@ -53,21 +57,17 @@ describe('SocialProviderRegistry', () => {
         X_CLIENT_SECRET: undefined,
         FACEBOOK_CLIENT_ID: undefined,
         FACEBOOK_CLIENT_SECRET: undefined,
+        INSTAGRAM_CLIENT_ID: undefined,
+        INSTAGRAM_CLIENT_SECRET: undefined,
       };
       const registry = new SocialProviderRegistry();
       expect(registry.get(platform)).toBeInstanceOf(MockProvider);
     },
   );
 
-  it.each<{ platform: SocialPlatform }>([
-    { platform: 'instagram' },
-    { platform: 'tiktok' },
-  ])(
-    'always uses MockProvider for media-only platform $platform',
-    ({ platform }) => {
-      process.env = { ...original, ...CREDS };
-      const registry = new SocialProviderRegistry();
-      expect(registry.get(platform)).toBeInstanceOf(MockProvider);
-    },
-  );
+  it('always uses MockProvider for TikTok until its provider lands', () => {
+    process.env = { ...original, ...CREDS };
+    const registry = new SocialProviderRegistry();
+    expect(registry.get('tiktok')).toBeInstanceOf(MockProvider);
+  });
 });
