@@ -93,7 +93,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     accent: 'from-slate-200 to-slate-400',
     capabilities: { text: false, image: false, video: true, requiresMedia: true },
     comingSoon: false,
-    note: 'Video posts only, pulled from a public URL. Unaudited apps can only post privately to the app\u2019s test users.',
+    note: 'Video only. Sent to your TikTok inbox as a draft to caption and post in the TikTok app.',
   },
 };
 

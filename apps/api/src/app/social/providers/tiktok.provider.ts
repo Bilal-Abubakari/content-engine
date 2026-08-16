@@ -11,13 +11,11 @@ import type {
 const AUTHORIZE_URL = 'https://www.tiktok.com/v2/auth/authorize/';
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const USER_INFO_URL = 'https://open.tiktokapis.com/v2/user/info/';
-/** Direct-post preflight: returns the privacy levels the creator may use. */
-const CREATOR_INFO_URL =
-  'https://open.tiktokapis.com/v2/post/publish/creator_info/query/';
-const VIDEO_INIT_URL =
-  'https://open.tiktokapis.com/v2/post/publish/video/init/';
-/** Basic profile + the ability to post a video directly to the account. */
-const SCOPES = 'user.info.basic,video.publish';
+/** Uploads the video to the creator's TikTok inbox as an editable draft. */
+const INBOX_INIT_URL =
+  'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/';
+/** Basic profile + the ability to upload a draft video to the account. */
+const SCOPES = 'user.info.basic,video.upload';
 
 /** OAuth token endpoint response (fields at the top level, not enveloped). */
 interface TokenResponse {
@@ -44,22 +42,21 @@ interface UserInfoData {
   user?: { open_id?: string; display_name?: string };
 }
 
-interface CreatorInfoData {
-  privacy_level_options?: string[];
-}
-
 interface PublishInitData {
   publish_id?: string;
 }
 
 /**
  * Publishes to TikTok via Login Kit v2 (OAuth) + the Content Posting API's
- * direct-post flow. Connecting exchanges the code for an access/refresh token
+ * inbox-upload flow. Connecting exchanges the code for an access/refresh token
  * pair and stores the creator's `open_id`. Publishing pulls the video from a
- * public URL (PULL_FROM_URL) — TikTok fetches it asynchronously, so the returned
- * post id is a `publish_id` to track processing. Direct posting requires the
- * TikTok app to be audited (unaudited apps can only post privately to the app's
- * own test users) and the media host domain to be verified in the dev portal.
+ * public URL (PULL_FROM_URL) into the creator's TikTok inbox as an editable
+ * draft — TikTok fetches it asynchronously, so the returned post id is a
+ * `publish_id` to track processing, and the creator finishes captioning and
+ * posting inside the TikTok app. This uses the `video.upload` scope (broadly
+ * available); direct/public posting needs the separately-audited
+ * `video.publish` scope. The media host domain must be verified in the dev
+ * portal for PULL_FROM_URL to be accepted.
  */
 export class TikTokProvider implements SocialProvider {
   readonly platform: SocialPlatform = 'tiktok';
@@ -145,9 +142,8 @@ export class TikTokProvider implements SocialProvider {
       throw new Error('TikTok requires a video to publish.');
     }
 
-    const privacyLevel = await this.resolvePrivacyLevel(tokens.accessToken);
     const init = await requestJson<TikTokEnvelope<PublishInitData>>(
-      VIDEO_INIT_URL,
+      INBOX_INIT_URL,
       {
         method: 'POST',
         headers: {
@@ -155,7 +151,6 @@ export class TikTokProvider implements SocialProvider {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: JSON.stringify({
-          post_info: { title: payload.content, privacy_level: privacyLevel },
           source_info: { source: 'PULL_FROM_URL', video_url: videoUrl },
         }),
       },
@@ -185,30 +180,6 @@ export class TikTokProvider implements SocialProvider {
     } catch {
       return undefined;
     }
-  }
-
-  /**
-   * TikTok rejects a post whose privacy level the account can't use, and the
-   * allowed set depends on the app's audit status. Query the creator's options
-   * and prefer a public post, falling back to whatever is permitted.
-   */
-  private async resolvePrivacyLevel(accessToken: string): Promise<string> {
-    const res = await requestJson<TikTokEnvelope<CreatorInfoData>>(
-      CREATOR_INFO_URL,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      },
-      'TikTok creator info',
-    );
-    const options =
-      this.unwrap(res, 'TikTok creator info').privacy_level_options ?? [];
-    return options.includes('PUBLIC_TO_EVERYONE')
-      ? 'PUBLIC_TO_EVERYONE'
-      : (options[0] ?? 'SELF_ONLY');
   }
 
   /** Unwrap TikTok's `{ data, error }` envelope, throwing on a non-`ok` code. */

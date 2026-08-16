@@ -1,6 +1,6 @@
 import { TikTokProvider } from './tiktok.provider';
 
-const SCOPES = 'user.info.basic,video.publish';
+const SCOPES = 'user.info.basic,video.upload';
 
 function json(obj: unknown, status = 200): Response {
   return new Response(JSON.stringify(obj), { status });
@@ -175,20 +175,8 @@ describe('TikTokProvider', () => {
   });
 
   describe('publish', () => {
-    it.each<{ name: string; options: string[]; expected: string }>([
-      {
-        name: 'prefers a public post when the creator may post publicly',
-        options: ['PUBLIC_TO_EVERYONE', 'SELF_ONLY'],
-        expected: 'PUBLIC_TO_EVERYONE',
-      },
-      {
-        name: 'falls back to the first permitted privacy level',
-        options: ['SELF_ONLY'],
-        expected: 'SELF_ONLY',
-      },
-    ])('$name', async ({ options, expected }) => {
+    it('uploads the video to the creator inbox via PULL_FROM_URL', async () => {
       const fetchMock = mockFetchSequence([
-        json({ data: { privacy_level_options: options } }),
         json({ data: { publish_id: 'publish-1' } }),
       ]);
 
@@ -203,18 +191,16 @@ describe('TikTokProvider', () => {
 
       expect(result.externalPostId).toBe('publish-1');
 
-      const [initUrl, initReq] = fetchMock.mock.calls[1] as [
+      const [initUrl, initReq] = fetchMock.mock.calls[0] as [
         string,
         RequestInit,
       ];
       expect(initUrl).toBe(
-        'https://open.tiktokapis.com/v2/post/publish/video/init/',
+        'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/',
       );
       const payload = JSON.parse(initReq.body as string);
-      expect(payload.post_info).toEqual({
-        title: 'Hello TikTok',
-        privacy_level: expected,
-      });
+      // Inbox drafts carry no post_info — the creator captions in-app.
+      expect(payload.post_info).toBeUndefined();
       expect(payload.source_info).toEqual({
         source: 'PULL_FROM_URL',
         video_url: 'https://cdn.test/clip.mp4',
@@ -231,26 +217,8 @@ describe('TikTokProvider', () => {
       ).rejects.toThrow('requires a video');
     });
 
-    it.each<{ name: string; step: string; responses: Response[]; error: RegExp }>(
-      [
-        {
-          name: 'surfaces a creator-info envelope error',
-          step: 'creator info',
-          responses: [json({ error: { code: 'scope_not_authorized' } })],
-          error: /TikTok creator info/,
-        },
-        {
-          name: 'surfaces a publish envelope error',
-          step: 'publish',
-          responses: [
-            json({ data: { privacy_level_options: ['PUBLIC_TO_EVERYONE'] } }),
-            json({ error: { code: 'url_ownership_unverified' } }),
-          ],
-          error: /TikTok publish/,
-        },
-      ],
-    )('$name', async ({ responses, error }) => {
-      mockFetchSequence(responses);
+    it('surfaces a publish envelope error', async () => {
+      mockFetchSequence([json({ error: { code: 'url_ownership_unverified' } })]);
       await expect(
         new TikTokProvider('key', 'secret').publish({
           tokens: { accessToken: 'access' },
@@ -260,7 +228,7 @@ describe('TikTokProvider', () => {
             mediaUrls: ['https://cdn.test/clip.mp4'],
           },
         }),
-      ).rejects.toThrow(error);
+      ).rejects.toThrow(/TikTok publish/);
     });
   });
 });
