@@ -15,6 +15,10 @@ export async function GET(
   const url = new URL(request.url);
   const connectionsPage = new URL('/dashboard/connections', url.origin);
 
+  // Keep the platform on every error redirect so the UI can offer a targeted
+  // "Try again" action instead of a generic message.
+  connectionsPage.searchParams.set('platform', platform);
+
   const providerError = url.searchParams.get('error');
   if (providerError) {
     connectionsPage.searchParams.set('error', providerError);
