@@ -19,16 +19,20 @@ const SCOPES = 'instagram_business_basic,instagram_business_content_publish';
 /** File extensions treated as video (published as a Reel); else an image. */
 const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm'];
 
+/** One token entry from the short-lived authorization-code exchange. */
+interface ShortLivedTokenEntry {
+  access_token: string;
+  user_id: string | number;
+  permissions?: string;
+}
+
 /**
- * Response from the short-lived authorization-code exchange. The Instagram
- * Business Login endpoint wraps the token in a single-element `data` array.
+ * Response from the short-lived authorization-code exchange. Instagram returns
+ * the token fields at the top level; some Meta docs instead show them wrapped
+ * in a single-element `data` array, so we accept either shape defensively.
  */
-interface ShortLivedTokenResponse {
-  data: {
-    access_token: string;
-    user_id: string | number;
-    permissions?: string;
-  }[];
+interface ShortLivedTokenResponse extends Partial<ShortLivedTokenEntry> {
+  data?: ShortLivedTokenEntry[];
 }
 
 /** Response from the long-lived token exchange / refresh. */
@@ -108,12 +112,13 @@ export class InstagramProvider implements SocialProvider {
       'Instagram token exchange',
     );
 
-    const entry = short.data[0];
-    if (!entry) {
+    const entry = short.data?.[0] ?? short;
+    const accessToken = entry.access_token;
+    if (!accessToken) {
       throw new Error('Instagram token exchange returned no account.');
     }
     const igUserId = String(entry.user_id);
-    const long = await this.exchangeForLongLived(entry.access_token);
+    const long = await this.exchangeForLongLived(accessToken);
     const profile = await this.fetchProfile(long.access_token);
 
     return {

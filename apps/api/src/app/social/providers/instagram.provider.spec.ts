@@ -89,6 +89,34 @@ describe('InstagramProvider', () => {
       }
     });
 
+    it.each<{ name: string; short: Record<string, unknown> }>([
+      {
+        name: 'reads a flat short-lived token response',
+        short: { access_token: 'short', user_id: 178414, permissions: SCOPES },
+      },
+      {
+        name: 'reads a data-wrapped short-lived token response',
+        short: {
+          data: [{ access_token: 'short', user_id: 178414, permissions: SCOPES }],
+        },
+      },
+    ])('$name', async ({ short }) => {
+      mockFetchSequence([
+        json(short),
+        json({ access_token: 'long-lived', expires_in: 5184000 }),
+        json({ user_id: 178414, username: 'jane.doe' }),
+      ]);
+
+      const account = await new InstagramProvider('id', 'secret').exchangeCode({
+        code: 'the-code',
+        redirectUri: 'https://app.test/cb',
+      });
+
+      expect(account.externalAccountId).toBe('178414');
+      expect(account.displayName).toBe('jane.doe');
+      expect(account.tokens.accessToken).toBe('long-lived');
+    });
+
     it('posts the code then upgrades to a long-lived token', async () => {
       const fetchMock = mockFetchSequence([
         json({ data: [{ access_token: 'short', user_id: 1 }] }),
