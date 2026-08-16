@@ -21,7 +21,10 @@ import {
 } from '@org/shared';
 import { SignJWT, jwtVerify } from 'jose';
 import { SocialProviderRegistry } from './providers/provider.registry';
-import type { OAuthTokens } from './providers/social-provider';
+import type {
+  OAuthTokens,
+  SocialProvider,
+} from './providers/social-provider';
 import { TokenCryptoService } from './token-crypto.service';
 
 /** Marker in the signed OAuth `state` token so it can't be reused elsewhere. */
@@ -285,9 +288,28 @@ export class SocialService {
     }
 
     const provider = this.registry.get(post.platform);
+
+    let tokens: OAuthTokens;
+    try {
+      tokens = await this.freshTokens(connection, provider);
+    } catch {
+      // A failed refresh means the stored credentials are no longer usable —
+      // there is nothing to retry with, so surface a reconnect prompt.
+      const failed = await this.prisma.socialPost.update({
+        where: { id: post.id },
+        data: {
+          status: PublishStatus.failed,
+          error: `Your ${
+            PLATFORM_CATALOGUE[post.platform].name
+          } connection has expired. Reconnect the account and try again.`,
+        },
+      });
+      return { post: failed, url: null };
+    }
+
     try {
       const result = await provider.publish({
-        tokens: this.decryptTokens(connection),
+        tokens,
         metadata: (connection.metadata as Record<string, unknown>) ?? null,
         payload: { content: post.content, mediaUrls: post.mediaUrls },
       });
@@ -394,6 +416,58 @@ export class SocialService {
       throw new UnauthorizedException('Server auth secret is not configured.');
     }
     return new TextEncoder().encode(secret);
+  }
+
+  /**
+   * Return usable tokens for a connection, refreshing first when the access
+   * token has expired (or is about to) and the provider supports it. Rotated
+   * credentials are persisted so the next publish — and the next refresh — use
+   * the current values. X issues short-lived (~2h) access tokens and rotates
+   * the refresh token on every use, so skipping persistence would break the
+   * following refresh. Providers without expiry (Facebook Page tokens, the
+   * mock) never take this path.
+   */
+  private async freshTokens(
+    connection: SocialConnection,
+    provider: SocialProvider,
+  ): Promise<OAuthTokens> {
+    const tokens = this.decryptTokens(connection);
+    if (!this.needsRefresh(tokens) || !tokens.refreshToken || !provider.refresh) {
+      return tokens;
+    }
+    const refreshed = await provider.refresh(tokens.refreshToken);
+    await this.persistRefreshedTokens(connection.id, refreshed);
+    return refreshed;
+  }
+
+  /** True when the access token has expired or will within the safety window. */
+  private needsRefresh(tokens: OAuthTokens): boolean {
+    if (!tokens.expiresAt) {
+      return false;
+    }
+    // Refresh a minute early so a token doesn't lapse mid-request.
+    const SKEW_MS = 60_000;
+    return tokens.expiresAt <= Date.now() + SKEW_MS;
+  }
+
+  /** Store rotated tokens (encrypted) after a successful refresh. */
+  private async persistRefreshedTokens(
+    connectionId: string,
+    tokens: OAuthTokens,
+  ): Promise<void> {
+    await this.prisma.socialConnection.update({
+      where: { id: connectionId },
+      data: {
+        accessToken: this.crypto.encrypt(tokens.accessToken),
+        // Keep the newest refresh token when the provider rotates it; leave the
+        // stored one untouched if a refresh response omits it.
+        ...(tokens.refreshToken
+          ? { refreshToken: this.crypto.encrypt(tokens.refreshToken) }
+          : {}),
+        scope: tokens.scope ?? null,
+        expiresAt: tokens.expiresAt ? new Date(tokens.expiresAt) : null,
+      },
+    });
   }
 
   private decryptTokens(connection: SocialConnection): OAuthTokens {

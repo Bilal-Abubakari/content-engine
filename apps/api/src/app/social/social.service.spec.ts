@@ -17,6 +17,7 @@ interface PrismaMock {
     findFirst: jest.Mock;
     findUnique: jest.Mock;
     upsert: jest.Mock;
+    update: jest.Mock;
     delete: jest.Mock;
   };
   socialPost: {
@@ -35,6 +36,7 @@ function makePrismaMock(): PrismaMock {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       upsert: jest.fn(),
+      update: jest.fn(),
       delete: jest.fn(),
     },
     socialPost: {
@@ -328,6 +330,128 @@ describe('SocialService', () => {
         scheduledFor: soon.toISOString(),
         url: null,
       });
+    });
+  });
+
+  describe('token refresh on publish (X)', () => {
+    // Activating real X credentials makes the registry hand back the live
+    // XProvider (which implements refresh); we then stub global.fetch for its
+    // token/tweet HTTP calls.
+    beforeAll(() => {
+      process.env.X_CLIENT_ID = 'x-id';
+      process.env.X_CLIENT_SECRET = 'x-secret';
+    });
+    afterAll(() => {
+      delete process.env.X_CLIENT_ID;
+      delete process.env.X_CLIENT_SECRET;
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    const xConnection = (expiresAt: Date | null) =>
+      connectionRow({
+        platform: 'x',
+        externalAccountId: 'x-ext',
+        accessToken: crypto.encrypt('old-access'),
+        refreshToken: crypto.encrypt('old-refresh'),
+        scope: 'tweet.write offline.access',
+        expiresAt,
+      });
+
+    const xPost = () => postRow({ platform: 'x', content: 'a tweet' });
+
+    function mockFetchSequence(responses: Response[]): jest.Mock {
+      const fn = jest.fn();
+      for (const r of responses) {
+        fn.mockResolvedValueOnce(r);
+      }
+      global.fetch = fn as unknown as typeof fetch;
+      return fn;
+    }
+    const jsonRes = (obj: unknown, status = 200): Response =>
+      new Response(JSON.stringify(obj), { status });
+
+    function wirePost(connection: Record<string, unknown>): void {
+      const post = xPost();
+      prisma.socialConnection.findFirst.mockResolvedValue(connection);
+      prisma.socialConnection.findUnique.mockResolvedValue(connection);
+      prisma.socialPost.create.mockResolvedValue(post);
+      prisma.socialPost.findUnique.mockResolvedValue(post);
+      prisma.socialPost.update.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          ...post,
+          ...data,
+        }),
+      );
+    }
+
+    it('refreshes an expired token, persists the rotation, then publishes', async () => {
+      wirePost(xConnection(new Date(Date.now() - 1000)));
+      const fetchMock = mockFetchSequence([
+        // 1) refresh_token exchange
+        jsonRes({
+          access_token: 'new-access',
+          refresh_token: 'new-refresh',
+          expires_in: 7200,
+          scope: 'tweet.write offline.access',
+        }),
+        // 2) POST /2/tweets
+        jsonRes({ data: { id: 'tweet-1' } }, 201),
+      ]);
+
+      const result = await service.publish('user-1', {
+        platform: 'x',
+        content: 'a tweet',
+      });
+
+      expect(result.status).toBe('published');
+      expect(result.externalPostId).toBe('tweet-1');
+
+      // The rotated tokens were written back, encrypted.
+      const update = prisma.socialConnection.update.mock.calls[0][0];
+      expect(update.where).toEqual({ id: 'conn-1' });
+      expect(crypto.decrypt(update.data.accessToken)).toBe('new-access');
+      expect(crypto.decrypt(update.data.refreshToken)).toBe('new-refresh');
+
+      // The tweet was posted with the freshly refreshed access token.
+      const [, tweetInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+      const headers = tweetInit.headers as Record<string, string>;
+      expect(headers.Authorization).toBe('Bearer new-access');
+    });
+
+    it('does not refresh a token that is still valid', async () => {
+      wirePost(xConnection(new Date(Date.now() + 3_600_000)));
+      const fetchMock = mockFetchSequence([
+        jsonRes({ data: { id: 'tweet-2' } }, 201),
+      ]);
+
+      const result = await service.publish('user-1', {
+        platform: 'x',
+        content: 'a tweet',
+      });
+
+      expect(result.status).toBe('published');
+      expect(prisma.socialConnection.update).not.toHaveBeenCalled();
+      // Only the publish call happened — no refresh round-trip.
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [, tweetInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const headers = tweetInit.headers as Record<string, string>;
+      expect(headers.Authorization).toBe('Bearer old-access');
+    });
+
+    it('marks the post failed with a reconnect prompt when refresh fails', async () => {
+      wirePost(xConnection(new Date(Date.now() - 1000)));
+      mockFetchSequence([jsonRes({ error: 'invalid_grant' }, 400)]);
+
+      const result = await service.publish('user-1', {
+        platform: 'x',
+        content: 'a tweet',
+      });
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toMatch(/expired.*[Rr]econnect/);
+      expect(prisma.socialConnection.update).not.toHaveBeenCalled();
     });
   });
 
