@@ -23,6 +23,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       content: body.content,
       mediaUrls: body.mediaUrls,
       scheduledFor: body.scheduledFor,
+      force: body.force,
     },
   });
 }

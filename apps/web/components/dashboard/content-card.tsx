@@ -91,6 +91,12 @@ export function ContentCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [publishing, setPublishing] = useState<SocialPlatform | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  // Set when the API reports this content was already published (409). Holds a
+  // warning to confirm before re-publishing with `force`.
+  const [confirm, setConfirm] = useState<{
+    platform: SocialPlatform;
+    text: string;
+  } | null>(null);
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState('');
   const [draftItems, setDraftItems] = useState<string[]>([]);
@@ -163,7 +169,7 @@ export function ContentCard({
     }
   }
 
-  async function handlePublish(platform: SocialPlatform) {
+  async function handlePublish(platform: SocialPlatform, force = false) {
     // Validate the schedule before firing so a bad time keeps the menu open
     // with an inline hint instead of silently posting now.
     const schedule = resolveSchedule(scheduleMode, scheduleAt);
@@ -173,6 +179,7 @@ export function ContentCard({
     }
     setScheduleError(null);
     setMenuOpen(false);
+    setConfirm(null);
     setPublishing(platform);
     setToast(null);
     setLinkCopied(false);
@@ -185,8 +192,22 @@ export function ContentCard({
           content: copyPayload,
           mediaUrls: media.map((item) => item.url),
           ...(schedule.iso ? { scheduledFor: schedule.iso } : {}),
+          ...(force ? { force: true } : {}),
         }),
       });
+      if (res.status === 409) {
+        // Already published — ask the user to confirm a re-publish.
+        const body = (await res.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        setConfirm({
+          platform,
+          text:
+            body?.message ??
+            'This content has already been published. Publish it again?',
+        });
+        return;
+      }
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as {
           message?: string;
@@ -442,6 +463,34 @@ export function ContentCard({
                 </button>
               </div>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {confirm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mb-3 rounded-lg bg-amber-500/15 px-3 py-2 text-xs text-amber-200"
+          >
+            <p>{confirm.text}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                onClick={() => handlePublish(confirm.platform, true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/25 px-2.5 py-1 font-medium text-amber-100 transition hover:bg-amber-500/35"
+              >
+                Publish anyway
+              </button>
+              <button
+                onClick={() => setConfirm(null)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-white/5 px-2.5 py-1 font-medium text-slate-200 transition hover:bg-white/10"
+              >
+                Cancel
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

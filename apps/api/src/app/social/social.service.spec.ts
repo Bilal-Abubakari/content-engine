@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ interface PrismaMock {
   };
   socialPost: {
     create: jest.Mock;
+    findFirst: jest.Mock;
     findMany: jest.Mock;
     findUnique: jest.Mock;
     update: jest.Mock;
@@ -41,6 +43,7 @@ function makePrismaMock(): PrismaMock {
     },
     socialPost: {
       create: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -244,6 +247,77 @@ describe('SocialService', () => {
           scheduledFor: 'not-a-date',
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('duplicate-publish guard', () => {
+    /** Wire up the full immediate-publish happy path for a linkedin post. */
+    const armImmediatePublish = () => {
+      prisma.socialConnection.findFirst.mockResolvedValue(connectionRow());
+      const created = postRow();
+      prisma.socialPost.create.mockResolvedValue(created);
+      prisma.socialPost.findUnique.mockResolvedValue(created);
+      prisma.socialConnection.findUnique.mockResolvedValue(connectionRow());
+      prisma.socialPost.update.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          ...created,
+          ...data,
+        }),
+      );
+    };
+
+    it.each<{ label: string; force?: boolean; expectBlocked: boolean }>([
+      {
+        label: 'blocks a re-publish of already-published content',
+        force: undefined,
+        expectBlocked: true,
+      },
+      {
+        label: 'allows the re-publish once the user forces it',
+        force: true,
+        expectBlocked: false,
+      },
+    ])('$label', async ({ force, expectBlocked }) => {
+      armImmediatePublish();
+      prisma.socialPost.findFirst.mockResolvedValue(
+        postRow({ status: 'published' }),
+      );
+
+      const call = service.publish('user-1', {
+        platform: 'linkedin',
+        content: 'hello world',
+        force,
+      });
+
+      if (expectBlocked) {
+        await expect(call).rejects.toThrow(ConflictException);
+        expect(prisma.socialPost.create).not.toHaveBeenCalled();
+      } else {
+        await expect(call).resolves.toMatchObject({ status: 'published' });
+        // force bypasses the duplicate lookup entirely.
+        expect(prisma.socialPost.findFirst).not.toHaveBeenCalled();
+      }
+    });
+
+    it('scopes the duplicate check to the user, platform, content and published status', async () => {
+      armImmediatePublish();
+      prisma.socialPost.findFirst.mockResolvedValue(null);
+
+      await service.publish('user-1', {
+        platform: 'linkedin',
+        content: 'hello world',
+      });
+
+      expect(prisma.socialPost.findFirst).toHaveBeenCalledWith({
+        where: {
+          userId: 'user-1',
+          platform: 'linkedin',
+          content: 'hello world',
+          status: 'published',
+        },
+      });
+      // No duplicate found, so the post is created and delivered.
+      expect(prisma.socialPost.create).toHaveBeenCalled();
     });
   });
 

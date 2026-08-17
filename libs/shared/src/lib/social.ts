@@ -138,6 +138,11 @@ export interface PublishRequest {
   mediaUrls?: string[];
   /** ISO-8601 time to publish at; omit/undefined to publish immediately. */
   scheduledFor?: string;
+  /**
+   * Bypass the duplicate-publish guard. When this exact content has already been
+   * published to the platform, the API rejects with 409 unless `force` is true.
+   */
+  force?: boolean;
 }
 
 /** Dashboard-facing view of a queued or delivered post. */

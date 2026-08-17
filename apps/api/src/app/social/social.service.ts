@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -160,6 +161,7 @@ export class SocialService {
       content: string;
       mediaUrls?: string[];
       scheduledFor?: string;
+      force?: boolean;
     },
   ): Promise<SocialPostView> {
     if (!isSocialPlatform(input.platform)) {
@@ -178,6 +180,17 @@ export class SocialService {
       throw new BadRequestException(
         `Connect a ${PLATFORM_CATALOGUE[platform].name} account before publishing.`,
       );
+    }
+
+    if (!input.force) {
+      const duplicate = await this.prisma.socialPost.findFirst({
+        where: { userId, platform, content, status: PublishStatus.published },
+      });
+      if (duplicate) {
+        throw new ConflictException(
+          `You've already published this content to ${PLATFORM_CATALOGUE[platform].name}. Publish it again?`,
+        );
+      }
     }
 
     const scheduledFor = this.parseSchedule(input.scheduledFor);

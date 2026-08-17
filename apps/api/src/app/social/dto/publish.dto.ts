@@ -11,4 +11,6 @@ export class PublishDto {
   mediaUrls?: string[];
   /** ISO-8601 time to publish at; omit to publish immediately. */
   scheduledFor?: string;
+  /** Bypass the duplicate-publish guard after the user confirms. */
+  force?: boolean;
 }

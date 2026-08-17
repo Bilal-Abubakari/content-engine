@@ -102,6 +102,7 @@ export class SocialController {
       content: body.content,
       mediaUrls: body.mediaUrls,
       scheduledFor: body.scheduledFor,
+      force: body.force,
     });
   }
 
