@@ -2,6 +2,7 @@
 
 import {
   PLATFORM_CATALOGUE,
+  isSocialPlatform,
   mediaSatisfiesPlatform,
   type MediaItem,
   type RepurposedContent,
@@ -149,15 +150,18 @@ export function ContentCard({
 
   // Unexpired connections that can receive this card: text platforms always,
   // media-only platforms (Instagram/TikTok) once a matching asset is attached.
-  const publishTargets = connections.filter((c) => {
-    const capabilities = PLATFORM_CATALOGUE[c.platform]?.capabilities;
-    if (!capabilities || c.expired) {
-      return false;
-    }
-    return capabilities.requiresMedia
-      ? mediaSatisfiesPlatform(c.platform, media)
-      : capabilities.text;
-  });
+  // Inbox-only channels (WhatsApp) are never publish targets.
+  const publishTargets = connections.filter(
+    (c): c is SocialConnectionView & { platform: SocialPlatform } => {
+      if (!isSocialPlatform(c.platform) || c.expired) {
+        return false;
+      }
+      const capabilities = PLATFORM_CATALOGUE[c.platform].capabilities;
+      return capabilities.requiresMedia
+        ? mediaSatisfiesPlatform(c.platform, media)
+        : capabilities.text;
+    },
+  );
 
   async function handleCopy() {
     try {

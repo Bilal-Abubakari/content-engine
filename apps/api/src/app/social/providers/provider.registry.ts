@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { SOCIAL_PLATFORMS, type SocialPlatform } from '@org/shared';
+import { INBOX_PLATFORMS, type InboxPlatform } from '@org/shared';
 import { FacebookProvider } from './facebook.provider';
 import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
@@ -17,15 +17,17 @@ import { XProvider } from './x.provider';
 @Injectable()
 export class SocialProviderRegistry {
   private readonly logger = new Logger(SocialProviderRegistry.name);
-  private readonly providers = new Map<SocialPlatform, SocialProvider>();
+  private readonly providers = new Map<InboxPlatform, SocialProvider>();
 
   constructor() {
-    for (const platform of SOCIAL_PLATFORMS) {
+    // Inbox-only channels (WhatsApp) are linked through the same OAuth loop, so
+    // they get a provider here too — a mock, since they're never published to.
+    for (const platform of INBOX_PLATFORMS) {
       this.providers.set(platform, this.createProvider(platform));
     }
   }
 
-  get(platform: SocialPlatform): SocialProvider {
+  get(platform: InboxPlatform): SocialProvider {
     const provider = this.providers.get(platform);
     if (!provider) {
       throw new BadRequestException(`Unsupported platform: ${platform}`);
@@ -33,7 +35,7 @@ export class SocialProviderRegistry {
     return provider;
   }
 
-  private createProvider(platform: SocialPlatform): SocialProvider {
+  private createProvider(platform: InboxPlatform): SocialProvider {
     const real = this.tryRealProvider(platform);
     if (real) {
       this.logger.log(`Using live provider for ${platform}.`);
@@ -43,7 +45,7 @@ export class SocialProviderRegistry {
   }
 
   /** Build the real provider when its credentials are present, else null. */
-  private tryRealProvider(platform: SocialPlatform): SocialProvider | null {
+  private tryRealProvider(platform: InboxPlatform): SocialProvider | null {
     const env = process.env;
     switch (platform) {
       case 'linkedin': {

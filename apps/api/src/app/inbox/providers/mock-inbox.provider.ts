@@ -1,7 +1,7 @@
 import {
-  PLATFORM_CATALOGUE,
+  INBOX_PLATFORM_CATALOGUE,
   type InboxChannel,
-  type SocialPlatform,
+  type InboxPlatform,
 } from '@org/shared';
 import { randomUUID } from 'node:crypto';
 import type {
@@ -35,7 +35,7 @@ function avatar(seed: string): string {
 
 /**
  * A believable customer-engagement backlog. Each template is only used for a
- * platform when its {@link PLATFORM_CATALOGUE} capabilities allow that channel,
+ * platform when its {@link INBOX_PLATFORM_CATALOGUE} capabilities allow that channel,
  * so the mock never fabricates activity a real API couldn't surface (e.g. DMs
  * on X's free tier, or any channel on LinkedIn).
  */
@@ -97,7 +97,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
  * poller stays idempotent and tests are stable.
  */
 export class MockInboxProvider implements InboxProvider {
-  constructor(readonly platform: SocialPlatform) {}
+  constructor(readonly platform: InboxPlatform) {}
 
   async fetch(context: InboxFetchContext): Promise<InboxFetchResult> {
     // Already seeded — a real provider would page forward from the cursor; the
@@ -106,7 +106,7 @@ export class MockInboxProvider implements InboxProvider {
       return { conversations: [], nextCursor: context.cursor };
     }
 
-    const caps = PLATFORM_CATALOGUE[this.platform].inbox;
+    const caps = INBOX_PLATFORM_CATALOGUE[this.platform].inbox;
     const allows = (channel: InboxChannel): boolean => {
       switch (channel) {
         case 'message':

@@ -1,4 +1,4 @@
-import type { SocialPlatform } from '@org/shared';
+import type { InboxPlatform } from '@org/shared';
 import { randomUUID } from 'node:crypto';
 import type {
   ConnectedAccount,
@@ -13,10 +13,12 @@ import type {
  * back at our own callback with a synthetic code, so the connect → callback →
  * publish flow is exercisable end-to-end with zero external setup. Every real
  * provider (LinkedIn, X, …) implements the same {@link SocialProvider} contract,
- * so swapping this out is a one-line registry change.
+ * so swapping this out is a one-line registry change. Also backs inbox-only
+ * channels (e.g. WhatsApp), which need the same connect → callback loop to link
+ * an account even though their {@link publish} is never exercised.
  */
 export class MockProvider implements SocialProvider {
-  constructor(readonly platform: SocialPlatform) {}
+  constructor(readonly platform: InboxPlatform) {}
 
   getAuthUrl({
     state,

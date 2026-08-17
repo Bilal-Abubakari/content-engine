@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  isSocialPlatform,
+  isInboxPlatform,
   type ConnectUrlResponse,
   type SocialConnectionView,
   type SocialPostView,
@@ -47,7 +47,7 @@ export class SocialController {
     @Req() req: AuthenticatedRequest,
     @Param('platform') platform: string,
   ): Promise<ConnectUrlResponse> {
-    if (!isSocialPlatform(platform)) {
+    if (!isInboxPlatform(platform)) {
       throw new BadRequestException(`Unsupported platform: ${platform}`);
     }
     const url = await this.social.getConnectUrl(this.userId(req), platform);
@@ -65,7 +65,7 @@ export class SocialController {
     @Param('platform') platform: string,
     @Body() body: CallbackDto,
   ): Promise<SocialConnectionView> {
-    if (!isSocialPlatform(platform)) {
+    if (!isInboxPlatform(platform)) {
       throw new BadRequestException(`Unsupported platform: ${platform}`);
     }
     if (!body.code || !body.state) {

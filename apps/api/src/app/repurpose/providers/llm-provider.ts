@@ -2,8 +2,8 @@ import type {
   ContentTone,
   GenerationFormat,
   InboxChannel,
+  InboxPlatform,
   RepurposedContent,
-  SocialPlatform,
 } from '@org/shared';
 import type { SourceType } from '../repurpose.service';
 
@@ -45,7 +45,7 @@ export type BrandVoice = Omit<GenerationOptions, 'formats'>;
 
 /** Everything a provider needs to draft an on-brand reply to an inbox thread. */
 export interface ReplyDraftRequest {
-  platform: SocialPlatform;
+  platform: InboxPlatform;
   channel: InboxChannel;
   /** Display name of the person being replied to. */
   participantName: string;

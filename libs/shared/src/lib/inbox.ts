@@ -12,7 +12,7 @@
  * Dependency-light on purpose: no Prisma/provider SDK imports leak in here.
  */
 
-import type { SocialPlatform } from './social.js';
+import type { InboxPlatform } from './social.js';
 
 /**
  * The kind of interaction an inbox item represents. A `message` is a private
@@ -104,7 +104,7 @@ export interface InboxItemView {
  */
 export interface ConversationView {
   id: string;
-  platform: SocialPlatform;
+  platform: InboxPlatform;
   channel: InboxChannel;
   /** The account/page this conversation belongs to (from the connection). */
   accountName: string | null;
@@ -128,7 +128,7 @@ export interface InboxQuery {
   /** Restrict to one channel, or omit for all channels. */
   channel?: InboxChannel;
   /** Restrict to one platform, or omit for all connected platforms. */
-  platform?: SocialPlatform;
+  platform?: InboxPlatform;
   /** Restrict to one workflow status, or omit for the active statuses. */
   status?: InboxItemStatus;
   /** Only threads with unread inbound activity. */

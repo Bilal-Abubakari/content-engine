@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { SOCIAL_PLATFORMS, type SocialPlatform } from '@org/shared';
+import { INBOX_PLATFORMS, type InboxPlatform } from '@org/shared';
 import type { InboxProvider } from './inbox-provider';
 import { MockInboxProvider } from './mock-inbox.provider';
 
@@ -12,15 +12,15 @@ import { MockInboxProvider } from './mock-inbox.provider';
  */
 @Injectable()
 export class InboxProviderRegistry {
-  private readonly providers = new Map<SocialPlatform, InboxProvider>();
+  private readonly providers = new Map<InboxPlatform, InboxProvider>();
 
   constructor() {
-    for (const platform of SOCIAL_PLATFORMS) {
+    for (const platform of INBOX_PLATFORMS) {
       this.providers.set(platform, new MockInboxProvider(platform));
     }
   }
 
-  get(platform: SocialPlatform): InboxProvider {
+  get(platform: InboxPlatform): InboxProvider {
     const provider = this.providers.get(platform);
     if (!provider) {
       throw new BadRequestException(`Unsupported platform: ${platform}`);

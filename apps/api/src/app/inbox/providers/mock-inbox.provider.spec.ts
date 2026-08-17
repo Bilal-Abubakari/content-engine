@@ -1,10 +1,10 @@
-import type { InboxChannel, SocialPlatform } from '@org/shared';
+import type { InboxChannel, InboxPlatform } from '@org/shared';
 import { MockInboxProvider } from './mock-inbox.provider';
 import type { InboxReplyContext } from './inbox-provider';
 
 describe('MockInboxProvider', () => {
   const baseFetch = (
-    platform: SocialPlatform,
+    platform: InboxPlatform,
     channel: InboxChannel,
     cursor: string | null = null,
   ) => ({
@@ -19,7 +19,7 @@ describe('MockInboxProvider', () => {
     // Each platform's API only surfaces certain channels; the mock must mirror
     // PLATFORM_CATALOGUE so it never fabricates activity a real API can't return.
     it.each<{
-      platform: SocialPlatform;
+      platform: InboxPlatform;
       channel: InboxChannel;
       expected: number;
     }>([
@@ -35,6 +35,10 @@ describe('MockInboxProvider', () => {
       { platform: 'tiktok', channel: 'mention', expected: 0 },
       { platform: 'linkedin', channel: 'comment', expected: 0 },
       { platform: 'linkedin', channel: 'message', expected: 0 },
+      // WhatsApp is a messaging-only inbox: DMs seed, comments/mentions never do.
+      { platform: 'whatsapp', channel: 'message', expected: 2 },
+      { platform: 'whatsapp', channel: 'comment', expected: 0 },
+      { platform: 'whatsapp', channel: 'mention', expected: 0 },
     ])(
       '$platform/$channel seeds $expected conversation(s)',
       async ({ platform, channel, expected }) => {

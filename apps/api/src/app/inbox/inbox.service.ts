@@ -16,8 +16,8 @@ import {
 } from '@org/database';
 import {
   ACTIVE_INBOX_STATUSES,
-  PLATFORM_CATALOGUE,
-  isSocialPlatform,
+  INBOX_PLATFORM_CATALOGUE,
+  isInboxPlatform,
   type ContentTone,
   type ConversationView,
   type InboxChannel,
@@ -25,8 +25,8 @@ import {
   type InboxItemView,
   type InboxPage,
   type InboxParticipant,
+  type InboxPlatform,
   type InboxQuery,
-  type SocialPlatform,
 } from '@org/shared';
 import {
   LLM_PROVIDER,
@@ -169,13 +169,13 @@ export class InboxService {
     if (!conversation || conversation.userId !== userId) {
       throw new NotFoundException('Conversation not found.');
     }
-    if (!isSocialPlatform(conversation.platform)) {
+    if (!isInboxPlatform(conversation.platform)) {
       throw new BadRequestException('Unknown platform for this conversation.');
     }
     const platform = conversation.platform;
-    if (!PLATFORM_CATALOGUE[platform].inbox.canReply) {
+    if (!INBOX_PLATFORM_CATALOGUE[platform].inbox.canReply) {
       throw new BadRequestException(
-        `Replying isn't supported for ${PLATFORM_CATALOGUE[platform].name} yet.`,
+        `Replying isn't supported for ${INBOX_PLATFORM_CATALOGUE[platform].name} yet.`,
       );
     }
 
@@ -288,7 +288,7 @@ export class InboxService {
     if (!row || row.userId !== userId) {
       throw new NotFoundException('Conversation not found.');
     }
-    if (!isSocialPlatform(row.platform)) {
+    if (!isInboxPlatform(row.platform)) {
       throw new BadRequestException('Unknown platform for this conversation.');
     }
 
@@ -327,7 +327,7 @@ export class InboxService {
 
   /** Ingest new activity for one connection across every channel it supports. */
   async syncConnection(connection: SocialConnection): Promise<number> {
-    if (!isSocialPlatform(connection.platform)) {
+    if (!isInboxPlatform(connection.platform)) {
       return 0;
     }
     const platform = connection.platform;
@@ -486,8 +486,8 @@ export class InboxService {
   }
 
   /** The channels a platform's API can surface, driving what we poll for. */
-  private channelsFor(platform: SocialPlatform): InboxChannel[] {
-    const caps = PLATFORM_CATALOGUE[platform].inbox;
+  private channelsFor(platform: InboxPlatform): InboxChannel[] {
+    const caps = INBOX_PLATFORM_CATALOGUE[platform].inbox;
     const channels: InboxChannel[] = [];
     if (caps.messages) {
       channels.push('message');
@@ -617,7 +617,7 @@ export class InboxService {
   private toListView(row: ConversationRow): ConversationView {
     return {
       id: row.id,
-      platform: row.platform as SocialPlatform,
+      platform: row.platform as InboxPlatform,
       channel: row.channel,
       accountName: row.accountName,
       participant: this.toParticipant(row),

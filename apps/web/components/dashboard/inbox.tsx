@@ -3,21 +3,20 @@
 import {
   ACTIVE_INBOX_STATUSES,
   INBOX_CHANNELS,
-  PLATFORM_CATALOGUE,
-  SOCIAL_PLATFORMS,
+  INBOX_PLATFORM_CATALOGUE,
+  INBOX_PLATFORMS,
   type ConversationView,
   type InboxChannel,
   type InboxDraftResponse,
   type InboxItemStatus,
   type InboxItemView,
   type InboxPage,
+  type InboxPlatform,
   type InboxStreamEvent,
-  type SocialPlatform,
 } from '@org/shared';
 import {
   Archive,
   AtSign,
-  Camera,
   Check,
   CheckCheck,
   Clock,
@@ -31,24 +30,30 @@ import {
   Send,
   Sparkles,
   Star,
-  Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
-import { LinkedInIcon, XIcon } from '../icons/brand-icons';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  WhatsAppIcon,
+  XIcon,
+} from '../icons/brand-icons';
 import { InboxCompose } from './inbox-compose';
 
 type Glyph = ComponentType<SVGProps<SVGSVGElement>> | LucideIcon;
 
-/** Per-platform icon. Only X/LinkedIn ship brand glyphs; others use generics. */
-const PLATFORM_ICON: Record<SocialPlatform, Glyph> = {
+/** Per-platform icon — each ships a real brand glyph so the rail reads at a glance. */
+const PLATFORM_ICON: Record<InboxPlatform, Glyph> = {
   linkedin: LinkedInIcon,
   x: XIcon,
-  facebook: Users,
-  instagram: Camera,
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
   tiktok: Music2,
+  whatsapp: WhatsAppIcon,
 };
 
 /** Display metadata for each channel, used across the rail, list and thread. */
@@ -109,7 +114,7 @@ function ConversationBadges({
   platform,
   channel,
 }: {
-  platform: SocialPlatform;
+  platform: InboxPlatform;
   channel: InboxChannel;
 }) {
   const PlatformGlyph = PLATFORM_ICON[platform];
@@ -173,7 +178,7 @@ export function Inbox() {
   // Filters.
   const [channel, setChannel] = useState<InboxChannel | null>(null);
   const [statusTab, setStatusTab] = useState<StatusTab>('active');
-  const [platform, setPlatform] = useState<SocialPlatform | null>(null);
+  const [platform, setPlatform] = useState<InboxPlatform | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
 
   // Thread pane.
@@ -414,7 +419,7 @@ export function Inbox() {
   }
 
   const canReply = active
-    ? PLATFORM_CATALOGUE[active.platform].inbox.canReply
+    ? INBOX_PLATFORM_CATALOGUE[active.platform].inbox.canReply
     : false;
 
   return (
@@ -502,13 +507,13 @@ export function Inbox() {
             >
               All
             </button>
-            {SOCIAL_PLATFORMS.map((p) => {
+            {INBOX_PLATFORMS.map((p) => {
               const Glyph = PLATFORM_ICON[p];
               return (
                 <button
                   key={p}
                   onClick={() => setPlatform(platform === p ? null : p)}
-                  title={PLATFORM_CATALOGUE[p].name}
+                  title={INBOX_PLATFORM_CATALOGUE[p].name}
                   className={`grid h-8 w-8 place-items-center rounded-full border transition ${
                     platform === p
                       ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
@@ -633,7 +638,7 @@ export function Inbox() {
                       />
                     </p>
                     <p className="text-xs text-slate-500">
-                      {PLATFORM_CATALOGUE[active.platform].name}
+                      {INBOX_PLATFORM_CATALOGUE[active.platform].name}
                       {active.accountName ? ` · ${active.accountName}` : ''}
                     </p>
                   </div>
@@ -728,7 +733,7 @@ export function Inbox() {
                 ) : (
                   <p className="flex items-center justify-center gap-2 py-2 text-center text-xs text-slate-500">
                     <Check className="h-4 w-4" />
-                    {PLATFORM_CATALOGUE[active.platform].name} doesn&apos;t
+                    {INBOX_PLATFORM_CATALOGUE[active.platform].name} doesn&apos;t
                     support replying through its API.
                   </p>
                 )}

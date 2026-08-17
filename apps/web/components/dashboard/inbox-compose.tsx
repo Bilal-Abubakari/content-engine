@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  isSocialPlatform,
   PLATFORM_CATALOGUE,
   type PublishRequest,
   type SocialConnectionView,
@@ -43,8 +44,11 @@ export function InboxCompose({ onClose }: { onClose: () => void }) {
           return;
         }
         setConnections(rows);
-        // Preselect the first connected platform for a one-click send.
-        const first = rows[0]?.platform;
+        // Preselect the first publishable platform for a one-click send.
+        // WhatsApp is inbox-only, so it can never be a publish target.
+        const first = rows
+          .map((r) => r.platform)
+          .filter(isSocialPlatform)[0];
         if (first) {
           setSelected([first]);
         }
@@ -99,7 +103,10 @@ export function InboxCompose({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const connectedPlatforms = connections.map((c) => c.platform);
+  // Only publishable platforms appear as post targets — WhatsApp is inbox-only.
+  const connectedPlatforms = connections
+    .map((c) => c.platform)
+    .filter(isSocialPlatform);
 
   return (
     <AnimatePresence>

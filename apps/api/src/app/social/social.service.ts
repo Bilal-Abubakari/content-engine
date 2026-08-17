@@ -15,6 +15,7 @@ import {
 import {
   PLATFORM_CATALOGUE,
   isSocialPlatform,
+  type InboxPlatform,
   type PublishStatusValue,
   type SocialConnectionView,
   type SocialPlatform,
@@ -72,7 +73,7 @@ export class SocialService {
    */
   async getConnectUrl(
     userId: string,
-    platform: SocialPlatform,
+    platform: InboxPlatform,
   ): Promise<string> {
     const provider = this.registry.get(platform);
     const state = await this.signState(userId, platform);
@@ -88,7 +89,7 @@ export class SocialService {
    */
   async handleCallback(
     userId: string,
-    platform: SocialPlatform,
+    platform: InboxPlatform,
     code: string,
     state: string,
   ): Promise<SocialConnectionView> {
@@ -387,14 +388,14 @@ export class SocialService {
     return date;
   }
 
-  private redirectUri(platform: SocialPlatform): string {
+  private redirectUri(platform: InboxPlatform): string {
     const origin = process.env.WEB_ORIGIN ?? 'http://localhost:4200';
     return `${origin}/api/social/${platform}/callback`;
   }
 
   private async signState(
     userId: string,
-    platform: SocialPlatform,
+    platform: InboxPlatform,
   ): Promise<string> {
     return new SignJWT({ purpose: CONNECT_STATE_PURPOSE, platform })
       .setProtectedHeader({ alg: 'HS256' })
@@ -406,7 +407,7 @@ export class SocialService {
 
   private async verifyState(
     userId: string,
-    platform: SocialPlatform,
+    platform: InboxPlatform,
     state: string,
   ): Promise<void> {
     try {
@@ -503,7 +504,7 @@ export class SocialService {
   private toConnectionView(row: SocialConnection): SocialConnectionView {
     return {
       id: row.id,
-      platform: row.platform as SocialPlatform,
+      platform: row.platform as InboxPlatform,
       displayName: row.displayName,
       expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
       expired: row.expiresAt ? row.expiresAt.getTime() <= Date.now() : false,

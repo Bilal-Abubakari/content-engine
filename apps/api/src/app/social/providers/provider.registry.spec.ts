@@ -1,4 +1,4 @@
-import type { SocialPlatform } from '@org/shared';
+import type { InboxPlatform, SocialPlatform } from '@org/shared';
 import { FacebookProvider } from './facebook.provider';
 import { InstagramProvider } from './instagram.provider';
 import { LinkedInProvider } from './linkedin.provider';
@@ -44,12 +44,14 @@ describe('SocialProviderRegistry', () => {
     },
   );
 
-  it.each<{ platform: SocialPlatform }>([
+  it.each<{ platform: InboxPlatform }>([
     { platform: 'linkedin' },
     { platform: 'x' },
     { platform: 'facebook' },
     { platform: 'instagram' },
     { platform: 'tiktok' },
+    // WhatsApp is inbox-only: it has no real provider, so it is always mocked.
+    { platform: 'whatsapp' },
   ])(
     'falls back to MockProvider for $platform without credentials',
     ({ platform }) => {

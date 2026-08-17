@@ -120,6 +120,81 @@ export function isSocialPlatform(value: unknown): value is SocialPlatform {
   );
 }
 
+/**
+ * A platform that can appear in the unified inbox. This is the publishing
+ * {@link SocialPlatform} set plus messaging-only channels like WhatsApp, which
+ * ContentEngine can receive and reply to but never *publishes* a broadcast post
+ * to. Keeping this union separate from {@link SocialPlatform} is deliberate: the
+ * repurpose/publish pipeline is typed against `SocialPlatform`, so a WhatsApp
+ * value can never leak into a "New post" target or a `RepurposedContent` field.
+ */
+export type InboxPlatform = SocialPlatform | 'whatsapp';
+
+/** The canonical ordered list of inbox-capable platforms. */
+export const INBOX_PLATFORMS: readonly InboxPlatform[] = [
+  ...SOCIAL_PLATFORMS,
+  'whatsapp',
+] as const;
+
+/** Type guard narrowing an arbitrary string to an InboxPlatform. */
+export function isInboxPlatform(value: unknown): value is InboxPlatform {
+  return (
+    typeof value === 'string' &&
+    (INBOX_PLATFORMS as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * Display + inbox-capability metadata for one inbox-capable platform. A subset
+ * of {@link PlatformMeta} — it drops the publishing `capabilities`, which don't
+ * apply to messaging-only channels — so every {@link PlatformMeta} is a valid
+ * {@link InboxPlatformMeta}.
+ */
+export interface InboxPlatformMeta {
+  id: InboxPlatform;
+  /** Human label for the UI, e.g. "WhatsApp". */
+  name: string;
+  /** Tailwind gradient classes for the platform's icon chip. */
+  accent: string;
+  /** Which inbound channels the platform surfaces and whether replies send. */
+  inbox: InboxCapabilities;
+  /** True while the platform isn't ready for end-to-end use yet. */
+  comingSoon: boolean;
+  /** Short informational note about real-world constraints. */
+  note?: string;
+}
+
+/**
+ * WhatsApp is an inbox-only channel: a business-messaging thread the user reads
+ * and replies to from the unified inbox. It is intentionally NOT a publishing
+ * target — posting to WhatsApp Status is a separate broadcast concept that is on
+ * the roadmap, not wired up yet.
+ */
+export const WHATSAPP_META: InboxPlatformMeta = {
+  id: 'whatsapp',
+  name: 'WhatsApp',
+  accent: 'from-green-500 to-emerald-600',
+  inbox: { messages: true, comments: false, mentions: false, canReply: true },
+  comingSoon: false,
+  note: 'Business messaging inbox — read and reply to customer chats. Posting to WhatsApp Status is on the roadmap.',
+};
+
+/**
+ * The full inbox catalogue: every publishing platform (reusing its
+ * {@link PLATFORM_CATALOGUE} entry) plus the messaging-only WhatsApp channel.
+ * Inbox surfaces render from this so WhatsApp appears alongside the socials
+ * without being forced into the publishing {@link SocialPlatform} union.
+ */
+export const INBOX_PLATFORM_CATALOGUE: Record<InboxPlatform, InboxPlatformMeta> =
+  {
+    linkedin: PLATFORM_CATALOGUE.linkedin,
+    x: PLATFORM_CATALOGUE.x,
+    facebook: PLATFORM_CATALOGUE.facebook,
+    instagram: PLATFORM_CATALOGUE.instagram,
+    tiktok: PLATFORM_CATALOGUE.tiktok,
+    whatsapp: WHATSAPP_META,
+  };
+
 /** Lifecycle of a queued/delivered post, mirrored from the DB enum. */
 export type PublishStatusValue =
   | 'draft'
@@ -134,7 +209,8 @@ export type PublishStatusValue =
  */
 export interface SocialConnectionView {
   id: string;
-  platform: SocialPlatform;
+  /** Includes messaging-only channels (WhatsApp), not just publishing targets. */
+  platform: InboxPlatform;
   /** The account/page/handle name shown to the user. */
   displayName: string | null;
   /** ISO-8601 token expiry, or null when the token does not expire. */

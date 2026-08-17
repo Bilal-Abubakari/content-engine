@@ -1,43 +1,48 @@
 'use client';
 
 import {
-  PLATFORM_CATALOGUE,
-  SOCIAL_PLATFORMS,
-  isSocialPlatform,
+  INBOX_PLATFORM_CATALOGUE,
+  INBOX_PLATFORMS,
+  isInboxPlatform,
+  type InboxPlatform,
   type SocialConnectionView,
-  type SocialPlatform,
 } from '@org/shared';
 import {
   AlertCircle,
-  Camera,
   CheckCircle2,
   Loader2,
   Music2,
-  Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
-import { LinkedInIcon, XIcon } from '../icons/brand-icons';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  WhatsAppIcon,
+  XIcon,
+} from '../icons/brand-icons';
 import { Hint } from '../tour/hint';
 
 type Glyph = ComponentType<SVGProps<SVGSVGElement>> | LucideIcon;
 
-/** Per-platform icon. Only X/LinkedIn ship brand glyphs; others use generics. */
-const PLATFORM_ICON: Record<SocialPlatform, Glyph> = {
+/** Per-platform icon — each ships a real brand glyph for instant recognition. */
+const PLATFORM_ICON: Record<InboxPlatform, Glyph> = {
   linkedin: LinkedInIcon,
   x: XIcon,
-  facebook: Users,
-  instagram: Camera,
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
   tiktok: Music2,
+  whatsapp: WhatsAppIcon,
 };
 
 /** A recovery step offered alongside an error flash. */
 export interface FlashAction {
   label: string;
   /** Retry connecting this platform, or... */
-  platform?: SocialPlatform;
+  platform?: InboxPlatform;
   /** ...navigate somewhere (e.g. the sign-in page). */
   href?: string;
 }
@@ -52,7 +57,7 @@ interface Flash {
 export function Connections() {
   const [connections, setConnections] = useState<SocialConnectionView[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<SocialPlatform | null>(null);
+  const [busy, setBusy] = useState<InboxPlatform | null>(null);
   const [flash, setFlash] = useState<Flash | null>(null);
 
   async function loadConnections() {
@@ -75,7 +80,7 @@ export function Connections() {
     setFlash(readFlash());
   }, []);
 
-  async function connect(platform: SocialPlatform) {
+  async function connect(platform: InboxPlatform) {
     setBusy(platform);
     try {
       const res = await fetch(`/api/social/${platform}/connect`, {
@@ -95,7 +100,7 @@ export function Connections() {
     }
   }
 
-  async function disconnect(connectionId: string, platform: SocialPlatform) {
+  async function disconnect(connectionId: string, platform: InboxPlatform) {
     setBusy(platform);
     try {
       await fetch(`/api/social/connections/${connectionId}`, {
@@ -169,8 +174,8 @@ export function Connections() {
       )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {SOCIAL_PLATFORMS.map((platform) => {
-          const meta = PLATFORM_CATALOGUE[platform];
+        {INBOX_PLATFORMS.map((platform) => {
+          const meta = INBOX_PLATFORM_CATALOGUE[platform];
           const Icon = PLATFORM_ICON[platform];
           const connection = connections.find((c) => c.platform === platform);
 
@@ -253,10 +258,11 @@ function readFlash(): Flash | null {
   const connected = params.get('connected');
   const error = params.get('error');
   const platformParam = params.get('platform');
-  const platform = isSocialPlatform(platformParam) ? platformParam : null;
+  const platform = isInboxPlatform(platformParam) ? platformParam : null;
 
   if (connected) {
-    const name = PLATFORM_CATALOGUE[connected as SocialPlatform]?.name ?? connected;
+    const name =
+      INBOX_PLATFORM_CATALOGUE[connected as InboxPlatform]?.name ?? connected;
     // Clean the query so a refresh doesn't re-show the banner.
     window.history.replaceState({}, '', '/dashboard/connections');
     return { kind: 'success', text: `${name} connected.` };
@@ -277,9 +283,11 @@ function readFlash(): Flash | null {
  */
 export function describeError(
   error: string,
-  platform: SocialPlatform | null,
+  platform: InboxPlatform | null,
 ): { text: string; action?: FlashAction } {
-  const name = platform ? PLATFORM_CATALOGUE[platform].name : 'your account';
+  const name = platform
+    ? INBOX_PLATFORM_CATALOGUE[platform].name
+    : 'your account';
   const retry: FlashAction | undefined = platform
     ? { label: 'Try again', platform }
     : undefined;

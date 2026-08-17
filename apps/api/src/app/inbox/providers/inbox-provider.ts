@@ -1,4 +1,4 @@
-import type { InboxChannel, InboxItemDirection, SocialPlatform } from '@org/shared';
+import type { InboxChannel, InboxItemDirection, InboxPlatform } from '@org/shared';
 import type { OAuthTokens } from '../../social/providers/social-provider';
 
 /** A person on the other side of a conversation, as a provider surfaces them. */
@@ -39,7 +39,7 @@ export interface NormalizedConversation {
 
 /** Inputs a provider needs to pull new activity for one connection + channel. */
 export interface InboxFetchContext {
-  platform: SocialPlatform;
+  platform: InboxPlatform;
   /** The single channel to pull; real APIs expose one endpoint per channel. */
   channel: InboxChannel;
   tokens: OAuthTokens;
@@ -57,7 +57,7 @@ export interface InboxFetchResult {
 
 /** Inputs a provider needs to send a reply back through the platform. */
 export interface InboxReplyContext {
-  platform: SocialPlatform;
+  platform: InboxPlatform;
   tokens: OAuthTokens;
   metadata: Record<string, unknown> | null;
   /** The platform thread/post id to reply within. */
@@ -84,7 +84,7 @@ export interface InboxReplyResult {
  * `SocialProvider` seam used for publishing.
  */
 export interface InboxProvider {
-  readonly platform: SocialPlatform;
+  readonly platform: InboxPlatform;
 
   /** Pull new inbound activity since {@link InboxFetchContext.cursor}. */
   fetch(context: InboxFetchContext): Promise<InboxFetchResult>;

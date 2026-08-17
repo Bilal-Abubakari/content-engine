@@ -339,27 +339,34 @@ describe('InboxService', () => {
   });
 
   describe('syncConnection', () => {
-    it('ingests every seeded thread across the platform channels and advances the cursor', async () => {
-      // New threads for every channel: conversation.findUnique returns null for
-      // the dedupe lookup (by connectionId+externalId) and a row for emitChange
-      // (by id).
-      prisma.conversation.findUnique.mockImplementation(
-        async ({ where }: { where: Record<string, unknown> }) =>
-          'connectionId_externalId' in where ? null : convRow(),
-      );
-      prisma.conversation.create.mockResolvedValue(convRow({ id: 'created' }));
-
-      const changed = await service.syncConnection(
-        connRow() as unknown as Parameters<
-          InboxService['syncConnection']
-        >[0],
-      );
-
+    it.each<{ platform: string; expected: number; breakdown: string }>([
       // Facebook surfaces message(2) + comment(2) + mention(1) + review(1) = 6.
-      expect(changed).toBe(6);
-      expect(prisma.conversation.create).toHaveBeenCalledTimes(6);
-      expect(prisma.syncCursor.upsert).toHaveBeenCalled();
-    });
+      { platform: 'facebook', expected: 6, breakdown: 'message+comment+mention+review' },
+      // WhatsApp is messaging-only, so just the two seeded DM threads land.
+      { platform: 'whatsapp', expected: 2, breakdown: 'message-only' },
+    ])(
+      'ingests the $breakdown seeded threads for $platform and advances the cursor',
+      async ({ platform, expected }) => {
+        // New threads for every channel: conversation.findUnique returns null for
+        // the dedupe lookup (by connectionId+externalId) and a row for emitChange
+        // (by id).
+        prisma.conversation.findUnique.mockImplementation(
+          async ({ where }: { where: Record<string, unknown> }) =>
+            'connectionId_externalId' in where ? null : convRow(),
+        );
+        prisma.conversation.create.mockResolvedValue(convRow({ id: 'created' }));
+
+        const changed = await service.syncConnection(
+          connRow({ platform }) as unknown as Parameters<
+            InboxService['syncConnection']
+          >[0],
+        );
+
+        expect(changed).toBe(expected);
+        expect(prisma.conversation.create).toHaveBeenCalledTimes(expected);
+        expect(prisma.syncCursor.upsert).toHaveBeenCalled();
+      },
+    );
 
     it('skips a connection on an unknown platform without touching the db', async () => {
       const changed = await service.syncConnection(
