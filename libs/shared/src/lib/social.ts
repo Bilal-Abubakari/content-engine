@@ -4,6 +4,8 @@
  * Dependency-light on purpose: no Prisma/provider SDK imports leak in here.
  */
 
+import type { InboxCapabilities } from './inbox.js';
+
 /** Every social platform ContentEngine can connect to and post on. */
 export type SocialPlatform =
   | 'linkedin'
@@ -47,6 +49,14 @@ export interface PlatformMeta {
    */
   comingSoon: boolean;
   /**
+   * Which inbound inbox channels this platform's API can surface, and whether
+   * replies can be sent back. Drives the unified-inbox filter rail and composer
+   * so the UI never offers an action the platform's API can't fulfil. See the
+   * capability matrix in the inbox module for the real-world API gating behind
+   * these flags.
+   */
+  inbox: InboxCapabilities;
+  /**
    * A short note surfaced in the UI about real-world constraints (app review,
    * paid tiers, Page/business-account requirements). Purely informational.
    */
@@ -60,6 +70,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'LinkedIn',
     accent: 'from-blue-600 to-indigo-600',
     capabilities: { text: true, image: true, video: true, requiresMedia: false },
+    inbox: { messages: false, comments: false, mentions: false, canReply: false },
     comingSoon: false,
     note: 'Posts as the signed-in member. Requires an approved LinkedIn app.',
   },
@@ -68,6 +79,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'X (Twitter)',
     accent: 'from-sky-500 to-blue-500',
     capabilities: { text: true, image: true, video: true, requiresMedia: false },
+    inbox: { messages: false, comments: false, mentions: true, canReply: true },
     comingSoon: false,
     note: 'Real posting needs X API access with a paid tier.',
   },
@@ -76,6 +88,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'Facebook',
     accent: 'from-blue-500 to-blue-700',
     capabilities: { text: true, image: true, video: true, requiresMedia: false },
+    inbox: { messages: true, comments: true, mentions: true, canReply: true },
     comingSoon: false,
     note: 'Publishes to a Facebook Page (not personal profiles).',
   },
@@ -84,6 +97,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'Instagram',
     accent: 'from-fuchsia-500 to-orange-500',
     capabilities: { text: false, image: true, video: true, requiresMedia: true },
+    inbox: { messages: true, comments: true, mentions: true, canReply: true },
     comingSoon: false,
     note: 'Business/Creator account only. Attach an image or video to every post.',
   },
@@ -92,6 +106,7 @@ export const PLATFORM_CATALOGUE: Record<SocialPlatform, PlatformMeta> = {
     name: 'TikTok',
     accent: 'from-slate-200 to-slate-400',
     capabilities: { text: false, image: false, video: true, requiresMedia: true },
+    inbox: { messages: false, comments: true, mentions: false, canReply: true },
     comingSoon: false,
     note: 'Video only. Sent to your TikTok inbox as a draft to caption and post in the TikTok app.',
   },

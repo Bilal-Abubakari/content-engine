@@ -1,5 +1,9 @@
 import type { RepurposedContent } from '@org/shared';
-import type { LlmGenerationRequest, LlmProvider } from './llm-provider';
+import type {
+  LlmGenerationRequest,
+  LlmProvider,
+  ReplyDraftRequest,
+} from './llm-provider';
 
 /** How long the mocked "LLM" pretends to think, in milliseconds. */
 const MOCK_LLM_DELAY_MS = 1500;
@@ -15,6 +19,27 @@ export class MockLlmProvider implements LlmProvider {
   async generate(request: LlmGenerationRequest): Promise<RepurposedContent> {
     await this.delay();
     return this.buildContent(request);
+  }
+
+  /**
+   * Draft a deterministic, on-brand reply for the demo/keyless path. It reflects
+   * the participant's first name, any steer the user passed, and their emoji
+   * preference, so the composer's "AI draft" button feels real end-to-end with
+   * no API credentials.
+   */
+  async draftReply(request: ReplyDraftRequest): Promise<string> {
+    await this.delay();
+    const firstName = request.participantName.trim().split(/\s+/)[0] || 'there';
+    const steer = request.instruction?.trim();
+    const sentences = [
+      `Hi ${firstName}, thanks so much for reaching out!`,
+      steer
+        ? `Happy to help — ${steer}.`
+        : `Happy to help you get the most out of ContentEngine.`,
+      `Could you share a little more about what you're after so we can point you the right way?`,
+    ];
+    const body = sentences.join(' ');
+    return request.voice.emojis ? `${body} 🙌` : body;
   }
 
   private delay(): Promise<void> {

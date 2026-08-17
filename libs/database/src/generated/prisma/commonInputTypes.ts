@@ -338,6 +338,57 @@ export type EnumPublishStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPublishStatusFilter<$PrismaModel>
 }
 
+export type EnumInboxChannelFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxChannel | Prisma.EnumInboxChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel> | $Enums.InboxChannel
+}
+
+export type EnumInboxItemStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemStatus | Prisma.EnumInboxItemStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel> | $Enums.InboxItemStatus
+}
+
+export type EnumInboxChannelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxChannel | Prisma.EnumInboxChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxChannelWithAggregatesFilter<$PrismaModel> | $Enums.InboxChannel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel>
+}
+
+export type EnumInboxItemStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemStatus | Prisma.EnumInboxItemStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemStatusWithAggregatesFilter<$PrismaModel> | $Enums.InboxItemStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel>
+}
+
+export type EnumInboxItemDirectionFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemDirection | Prisma.EnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel> | $Enums.InboxItemDirection
+}
+
+export type EnumInboxItemDirectionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemDirection | Prisma.EnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemDirectionWithAggregatesFilter<$PrismaModel> | $Enums.InboxItemDirection
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -619,6 +670,57 @@ export type NestedEnumPublishStatusWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPublishStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPublishStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumInboxChannelFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxChannel | Prisma.EnumInboxChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel> | $Enums.InboxChannel
+}
+
+export type NestedEnumInboxItemStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemStatus | Prisma.EnumInboxItemStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel> | $Enums.InboxItemStatus
+}
+
+export type NestedEnumInboxChannelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxChannel | Prisma.EnumInboxChannelFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxChannel[] | Prisma.ListEnumInboxChannelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxChannelWithAggregatesFilter<$PrismaModel> | $Enums.InboxChannel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxChannelFilter<$PrismaModel>
+}
+
+export type NestedEnumInboxItemStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemStatus | Prisma.EnumInboxItemStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemStatus[] | Prisma.ListEnumInboxItemStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemStatusWithAggregatesFilter<$PrismaModel> | $Enums.InboxItemStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxItemStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumInboxItemDirectionFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemDirection | Prisma.EnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel> | $Enums.InboxItemDirection
+}
+
+export type NestedEnumInboxItemDirectionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InboxItemDirection | Prisma.EnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  in?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InboxItemDirection[] | Prisma.ListEnumInboxItemDirectionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInboxItemDirectionWithAggregatesFilter<$PrismaModel> | $Enums.InboxItemDirection
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInboxItemDirectionFilter<$PrismaModel>
 }
 
 

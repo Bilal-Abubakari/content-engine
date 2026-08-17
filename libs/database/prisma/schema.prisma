@@ -27,6 +27,7 @@ model User {
   usageRecords      UsageRecord[]
   socialConnections SocialConnection[]
   socialPosts       SocialPost[]
+  conversations     Conversation[]
   repurposeJobs     RepurposeJob[]
   settings          UserSettings?
   createdAt         DateTime           @default(now())
@@ -175,8 +176,10 @@ model SocialConnection {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  posts SocialPost[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts         SocialPost[]
+  conversations Conversation[]
+  syncCursors   SyncCursor[]
 
   @@unique([userId, platform, externalAccountId])
   @@index([userId])
@@ -214,4 +217,112 @@ model SocialPost {
 
   @@index([userId])
   @@index([status, scheduledFor])
+}
+
+/// The kind of interaction an inbox item represents. Mirrors InboxChannel in
+/// @org/shared: a private DM (`message`), a public reply on the user's own post
+/// (`comment`), a public post tagging the user (`mention`), or a rating/review.
+enum InboxChannel {
+  message
+  comment
+  mention
+  review
+}
+
+/// Workflow state of a conversation, enabling a shared team inbox. Mirrors
+/// InboxItemStatus in @org/shared.
+enum InboxItemStatus {
+  unread
+  read
+  replied
+  snoozed
+  archived
+}
+
+/// Whether an item came from the audience (`inbound`) or the user (`outbound`).
+enum InboxItemDirection {
+  inbound
+  outbound
+}
+
+/// One normalized conversation thread in the unified inbox — a DM thread, the
+/// comment tree under a post, or the context around a mention. `externalId` is
+/// the platform's thread/post id; unique per connection so ingestion can upsert
+/// idempotently. `status`/`snoozedUntil` drive the shared team-inbox workflow.
+model Conversation {
+  id                    String          @id @default(cuid())
+  userId                String
+  connectionId          String
+  platform              String
+  channel               InboxChannel
+  externalId            String
+  accountName           String?
+  participantExternalId String?
+  participantName       String
+  participantAvatarUrl  String?
+  snippet               String          @db.Text
+  status                InboxItemStatus @default(unread)
+  unreadCount           Int             @default(0)
+  lastActivityAt        DateTime        @default(now())
+  snoozedUntil          DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection SocialConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  items      InboxItem[]
+
+  @@unique([connectionId, externalId])
+  @@index([userId, status, lastActivityAt])
+  @@index([userId, platform])
+}
+
+/// A single normalized interaction inside a Conversation: one DM, comment,
+/// mention, or the user's own outbound reply. `externalId` is the platform's id
+/// for the item; unique per conversation for idempotent ingestion.
+model InboxItem {
+  id               String             @id @default(cuid())
+  conversationId   String
+  channel          InboxChannel
+  direction        InboxItemDirection
+  text             String             @db.Text
+  authorExternalId String?
+  authorName       String
+  authorAvatarUrl  String?
+  permalink        String?
+  externalId       String
+  createdAt        DateTime           @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, externalId])
+  @@index([conversationId, createdAt])
+}
+
+/// Per-connection, per-channel ingestion bookmark so pollers resume where they
+/// left off instead of re-fetching everything.
+model SyncCursor {
+  id           String       @id @default(cuid())
+  connectionId String
+  channel      InboxChannel
+  cursor       String?
+  lastSyncedAt DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  connection SocialConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, channel])
+}
+
+/// Idempotency ledger for inbound platform webhooks: dedupes retried deliveries
+/// so a normalized item is never inserted twice. Keyed by platform + the
+/// platform's own event/delivery id.
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  platform   String
+  externalId String
+  receivedAt DateTime @default(now())
+
+  @@unique([platform, externalId])
 }

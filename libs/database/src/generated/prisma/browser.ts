@@ -85,3 +85,31 @@ export type SocialConnection = Prisma.SocialConnectionModel
  * success; `error` captures the failure reason otherwise.
  */
 export type SocialPost = Prisma.SocialPostModel
+/**
+ * Model Conversation
+ * One normalized conversation thread in the unified inbox — a DM thread, the
+ * comment tree under a post, or the context around a mention. `externalId` is
+ * the platform's thread/post id; unique per connection so ingestion can upsert
+ * idempotently. `status`/`snoozedUntil` drive the shared team-inbox workflow.
+ */
+export type Conversation = Prisma.ConversationModel
+/**
+ * Model InboxItem
+ * A single normalized interaction inside a Conversation: one DM, comment,
+ * mention, or the user's own outbound reply. `externalId` is the platform's id
+ * for the item; unique per conversation for idempotent ingestion.
+ */
+export type InboxItem = Prisma.InboxItemModel
+/**
+ * Model SyncCursor
+ * Per-connection, per-channel ingestion bookmark so pollers resume where they
+ * left off instead of re-fetching everything.
+ */
+export type SyncCursor = Prisma.SyncCursorModel
+/**
+ * Model WebhookEvent
+ * Idempotency ledger for inbound platform webhooks: dedupes retried deliveries
+ * so a normalized item is never inserted twice. Keyed by platform + the
+ * platform's own event/delivery id.
+ */
+export type WebhookEvent = Prisma.WebhookEventModel

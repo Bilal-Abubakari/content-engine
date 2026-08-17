@@ -240,6 +240,8 @@ export type SocialConnectionWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"SocialConnection"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   posts?: Prisma.SocialPostListRelationFilter
+  conversations?: Prisma.ConversationListRelationFilter
+  syncCursors?: Prisma.SyncCursorListRelationFilter
 }
 
 export type SocialConnectionOrderByWithRelationInput = {
@@ -257,6 +259,8 @@ export type SocialConnectionOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   posts?: Prisma.SocialPostOrderByRelationAggregateInput
+  conversations?: Prisma.ConversationOrderByRelationAggregateInput
+  syncCursors?: Prisma.SyncCursorOrderByRelationAggregateInput
 }
 
 export type SocialConnectionWhereUniqueInput = Prisma.AtLeast<{
@@ -278,6 +282,8 @@ export type SocialConnectionWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"SocialConnection"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   posts?: Prisma.SocialPostListRelationFilter
+  conversations?: Prisma.ConversationListRelationFilter
+  syncCursors?: Prisma.SyncCursorListRelationFilter
 }, "id" | "userId_platform_externalAccountId">
 
 export type SocialConnectionOrderByWithAggregationInput = {
@@ -330,6 +336,8 @@ export type SocialConnectionCreateInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutSocialConnectionsInput
   posts?: Prisma.SocialPostCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionUncheckedCreateInput = {
@@ -346,6 +354,8 @@ export type SocialConnectionUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   posts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionUpdateInput = {
@@ -362,6 +372,8 @@ export type SocialConnectionUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutSocialConnectionsNestedInput
   posts?: Prisma.SocialPostUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionUncheckedUpdateInput = {
@@ -378,6 +390,8 @@ export type SocialConnectionUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   posts?: Prisma.SocialPostUncheckedUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionCreateManyInput = {
@@ -544,6 +558,34 @@ export type SocialConnectionUpdateOneRequiredWithoutPostsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SocialConnectionUpdateToOneWithWhereWithoutPostsInput, Prisma.SocialConnectionUpdateWithoutPostsInput>, Prisma.SocialConnectionUncheckedUpdateWithoutPostsInput>
 }
 
+export type SocialConnectionCreateNestedOneWithoutConversationsInput = {
+  create?: Prisma.XOR<Prisma.SocialConnectionCreateWithoutConversationsInput, Prisma.SocialConnectionUncheckedCreateWithoutConversationsInput>
+  connectOrCreate?: Prisma.SocialConnectionCreateOrConnectWithoutConversationsInput
+  connect?: Prisma.SocialConnectionWhereUniqueInput
+}
+
+export type SocialConnectionUpdateOneRequiredWithoutConversationsNestedInput = {
+  create?: Prisma.XOR<Prisma.SocialConnectionCreateWithoutConversationsInput, Prisma.SocialConnectionUncheckedCreateWithoutConversationsInput>
+  connectOrCreate?: Prisma.SocialConnectionCreateOrConnectWithoutConversationsInput
+  upsert?: Prisma.SocialConnectionUpsertWithoutConversationsInput
+  connect?: Prisma.SocialConnectionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SocialConnectionUpdateToOneWithWhereWithoutConversationsInput, Prisma.SocialConnectionUpdateWithoutConversationsInput>, Prisma.SocialConnectionUncheckedUpdateWithoutConversationsInput>
+}
+
+export type SocialConnectionCreateNestedOneWithoutSyncCursorsInput = {
+  create?: Prisma.XOR<Prisma.SocialConnectionCreateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedCreateWithoutSyncCursorsInput>
+  connectOrCreate?: Prisma.SocialConnectionCreateOrConnectWithoutSyncCursorsInput
+  connect?: Prisma.SocialConnectionWhereUniqueInput
+}
+
+export type SocialConnectionUpdateOneRequiredWithoutSyncCursorsNestedInput = {
+  create?: Prisma.XOR<Prisma.SocialConnectionCreateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedCreateWithoutSyncCursorsInput>
+  connectOrCreate?: Prisma.SocialConnectionCreateOrConnectWithoutSyncCursorsInput
+  upsert?: Prisma.SocialConnectionUpsertWithoutSyncCursorsInput
+  connect?: Prisma.SocialConnectionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SocialConnectionUpdateToOneWithWhereWithoutSyncCursorsInput, Prisma.SocialConnectionUpdateWithoutSyncCursorsInput>, Prisma.SocialConnectionUncheckedUpdateWithoutSyncCursorsInput>
+}
+
 export type SocialConnectionCreateWithoutUserInput = {
   id?: string
   platform: string
@@ -557,6 +599,8 @@ export type SocialConnectionCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   posts?: Prisma.SocialPostCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionUncheckedCreateWithoutUserInput = {
@@ -572,6 +616,8 @@ export type SocialConnectionUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   posts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionCreateOrConnectWithoutUserInput = {
@@ -631,6 +677,8 @@ export type SocialConnectionCreateWithoutPostsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutSocialConnectionsInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionUncheckedCreateWithoutPostsInput = {
@@ -646,6 +694,8 @@ export type SocialConnectionUncheckedCreateWithoutPostsInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type SocialConnectionCreateOrConnectWithoutPostsInput = {
@@ -677,6 +727,8 @@ export type SocialConnectionUpdateWithoutPostsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutSocialConnectionsNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionUncheckedUpdateWithoutPostsInput = {
@@ -692,6 +744,176 @@ export type SocialConnectionUncheckedUpdateWithoutPostsInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUncheckedUpdateManyWithoutConnectionNestedInput
+}
+
+export type SocialConnectionCreateWithoutConversationsInput = {
+  id?: string
+  platform: string
+  externalAccountId: string
+  displayName?: string | null
+  accessToken: string
+  refreshToken?: string | null
+  scope?: string | null
+  expiresAt?: Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutSocialConnectionsInput
+  posts?: Prisma.SocialPostCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorCreateNestedManyWithoutConnectionInput
+}
+
+export type SocialConnectionUncheckedCreateWithoutConversationsInput = {
+  id?: string
+  userId: string
+  platform: string
+  externalAccountId: string
+  displayName?: string | null
+  accessToken: string
+  refreshToken?: string | null
+  scope?: string | null
+  expiresAt?: Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  posts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutConnectionInput
+  syncCursors?: Prisma.SyncCursorUncheckedCreateNestedManyWithoutConnectionInput
+}
+
+export type SocialConnectionCreateOrConnectWithoutConversationsInput = {
+  where: Prisma.SocialConnectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.SocialConnectionCreateWithoutConversationsInput, Prisma.SocialConnectionUncheckedCreateWithoutConversationsInput>
+}
+
+export type SocialConnectionUpsertWithoutConversationsInput = {
+  update: Prisma.XOR<Prisma.SocialConnectionUpdateWithoutConversationsInput, Prisma.SocialConnectionUncheckedUpdateWithoutConversationsInput>
+  create: Prisma.XOR<Prisma.SocialConnectionCreateWithoutConversationsInput, Prisma.SocialConnectionUncheckedCreateWithoutConversationsInput>
+  where?: Prisma.SocialConnectionWhereInput
+}
+
+export type SocialConnectionUpdateToOneWithWhereWithoutConversationsInput = {
+  where?: Prisma.SocialConnectionWhereInput
+  data: Prisma.XOR<Prisma.SocialConnectionUpdateWithoutConversationsInput, Prisma.SocialConnectionUncheckedUpdateWithoutConversationsInput>
+}
+
+export type SocialConnectionUpdateWithoutConversationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  platform?: Prisma.StringFieldUpdateOperationsInput | string
+  externalAccountId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessToken?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutSocialConnectionsNestedInput
+  posts?: Prisma.SocialPostUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUpdateManyWithoutConnectionNestedInput
+}
+
+export type SocialConnectionUncheckedUpdateWithoutConversationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  platform?: Prisma.StringFieldUpdateOperationsInput | string
+  externalAccountId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessToken?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  posts?: Prisma.SocialPostUncheckedUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUncheckedUpdateManyWithoutConnectionNestedInput
+}
+
+export type SocialConnectionCreateWithoutSyncCursorsInput = {
+  id?: string
+  platform: string
+  externalAccountId: string
+  displayName?: string | null
+  accessToken: string
+  refreshToken?: string | null
+  scope?: string | null
+  expiresAt?: Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutSocialConnectionsInput
+  posts?: Prisma.SocialPostCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutConnectionInput
+}
+
+export type SocialConnectionUncheckedCreateWithoutSyncCursorsInput = {
+  id?: string
+  userId: string
+  platform: string
+  externalAccountId: string
+  displayName?: string | null
+  accessToken: string
+  refreshToken?: string | null
+  scope?: string | null
+  expiresAt?: Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  posts?: Prisma.SocialPostUncheckedCreateNestedManyWithoutConnectionInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutConnectionInput
+}
+
+export type SocialConnectionCreateOrConnectWithoutSyncCursorsInput = {
+  where: Prisma.SocialConnectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.SocialConnectionCreateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedCreateWithoutSyncCursorsInput>
+}
+
+export type SocialConnectionUpsertWithoutSyncCursorsInput = {
+  update: Prisma.XOR<Prisma.SocialConnectionUpdateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedUpdateWithoutSyncCursorsInput>
+  create: Prisma.XOR<Prisma.SocialConnectionCreateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedCreateWithoutSyncCursorsInput>
+  where?: Prisma.SocialConnectionWhereInput
+}
+
+export type SocialConnectionUpdateToOneWithWhereWithoutSyncCursorsInput = {
+  where?: Prisma.SocialConnectionWhereInput
+  data: Prisma.XOR<Prisma.SocialConnectionUpdateWithoutSyncCursorsInput, Prisma.SocialConnectionUncheckedUpdateWithoutSyncCursorsInput>
+}
+
+export type SocialConnectionUpdateWithoutSyncCursorsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  platform?: Prisma.StringFieldUpdateOperationsInput | string
+  externalAccountId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessToken?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutSocialConnectionsNestedInput
+  posts?: Prisma.SocialPostUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutConnectionNestedInput
+}
+
+export type SocialConnectionUncheckedUpdateWithoutSyncCursorsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  platform?: Prisma.StringFieldUpdateOperationsInput | string
+  externalAccountId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessToken?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  posts?: Prisma.SocialPostUncheckedUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionCreateManyUserInput = {
@@ -721,6 +943,8 @@ export type SocialConnectionUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   posts?: Prisma.SocialPostUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionUncheckedUpdateWithoutUserInput = {
@@ -736,6 +960,8 @@ export type SocialConnectionUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   posts?: Prisma.SocialPostUncheckedUpdateManyWithoutConnectionNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutConnectionNestedInput
+  syncCursors?: Prisma.SyncCursorUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type SocialConnectionUncheckedUpdateManyWithoutUserInput = {
@@ -759,10 +985,14 @@ export type SocialConnectionUncheckedUpdateManyWithoutUserInput = {
 
 export type SocialConnectionCountOutputType = {
   posts: number
+  conversations: number
+  syncCursors: number
 }
 
 export type SocialConnectionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   posts?: boolean | SocialConnectionCountOutputTypeCountPostsArgs
+  conversations?: boolean | SocialConnectionCountOutputTypeCountConversationsArgs
+  syncCursors?: boolean | SocialConnectionCountOutputTypeCountSyncCursorsArgs
 }
 
 /**
@@ -782,6 +1012,20 @@ export type SocialConnectionCountOutputTypeCountPostsArgs<ExtArgs extends runtim
   where?: Prisma.SocialPostWhereInput
 }
 
+/**
+ * SocialConnectionCountOutputType without action
+ */
+export type SocialConnectionCountOutputTypeCountConversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ConversationWhereInput
+}
+
+/**
+ * SocialConnectionCountOutputType without action
+ */
+export type SocialConnectionCountOutputTypeCountSyncCursorsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SyncCursorWhereInput
+}
+
 
 export type SocialConnectionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -798,6 +1042,8 @@ export type SocialConnectionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   posts?: boolean | Prisma.SocialConnection$postsArgs<ExtArgs>
+  conversations?: boolean | Prisma.SocialConnection$conversationsArgs<ExtArgs>
+  syncCursors?: boolean | Prisma.SocialConnection$syncCursorsArgs<ExtArgs>
   _count?: boolean | Prisma.SocialConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["socialConnection"]>
 
@@ -852,6 +1098,8 @@ export type SocialConnectionOmit<ExtArgs extends runtime.Types.Extensions.Intern
 export type SocialConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   posts?: boolean | Prisma.SocialConnection$postsArgs<ExtArgs>
+  conversations?: boolean | Prisma.SocialConnection$conversationsArgs<ExtArgs>
+  syncCursors?: boolean | Prisma.SocialConnection$syncCursorsArgs<ExtArgs>
   _count?: boolean | Prisma.SocialConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type SocialConnectionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -866,6 +1114,8 @@ export type $SocialConnectionPayload<ExtArgs extends runtime.Types.Extensions.In
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     posts: Prisma.$SocialPostPayload<ExtArgs>[]
+    conversations: Prisma.$ConversationPayload<ExtArgs>[]
+    syncCursors: Prisma.$SyncCursorPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1280,6 +1530,8 @@ export interface Prisma__SocialConnectionClient<T, Null = never, ExtArgs extends
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   posts<T extends Prisma.SocialConnection$postsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SocialConnection$postsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocialPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  conversations<T extends Prisma.SocialConnection$conversationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SocialConnection$conversationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  syncCursors<T extends Prisma.SocialConnection$syncCursorsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SocialConnection$syncCursorsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SyncCursorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1743,6 +1995,54 @@ export type SocialConnection$postsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.SocialPostScalarFieldEnum | Prisma.SocialPostScalarFieldEnum[]
+}
+
+/**
+ * SocialConnection.conversations
+ */
+export type SocialConnection$conversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Conversation
+   */
+  select?: Prisma.ConversationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Conversation
+   */
+  omit?: Prisma.ConversationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConversationInclude<ExtArgs> | null
+  where?: Prisma.ConversationWhereInput
+  orderBy?: Prisma.ConversationOrderByWithRelationInput | Prisma.ConversationOrderByWithRelationInput[]
+  cursor?: Prisma.ConversationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ConversationScalarFieldEnum | Prisma.ConversationScalarFieldEnum[]
+}
+
+/**
+ * SocialConnection.syncCursors
+ */
+export type SocialConnection$syncCursorsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SyncCursor
+   */
+  select?: Prisma.SyncCursorSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SyncCursor
+   */
+  omit?: Prisma.SyncCursorOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SyncCursorInclude<ExtArgs> | null
+  where?: Prisma.SyncCursorWhereInput
+  orderBy?: Prisma.SyncCursorOrderByWithRelationInput | Prisma.SyncCursorOrderByWithRelationInput[]
+  cursor?: Prisma.SyncCursorWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SyncCursorScalarFieldEnum | Prisma.SyncCursorScalarFieldEnum[]
 }
 
 /**

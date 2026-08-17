@@ -31,3 +31,32 @@ export const PublishStatus = {
 } as const
 
 export type PublishStatus = (typeof PublishStatus)[keyof typeof PublishStatus]
+
+
+export const InboxChannel = {
+  message: 'message',
+  comment: 'comment',
+  mention: 'mention',
+  review: 'review'
+} as const
+
+export type InboxChannel = (typeof InboxChannel)[keyof typeof InboxChannel]
+
+
+export const InboxItemStatus = {
+  unread: 'unread',
+  read: 'read',
+  replied: 'replied',
+  snoozed: 'snoozed',
+  archived: 'archived'
+} as const
+
+export type InboxItemStatus = (typeof InboxItemStatus)[keyof typeof InboxItemStatus]
+
+
+export const InboxItemDirection = {
+  inbound: 'inbound',
+  outbound: 'outbound'
+} as const
+
+export type InboxItemDirection = (typeof InboxItemDirection)[keyof typeof InboxItemDirection]

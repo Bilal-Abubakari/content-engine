@@ -2,8 +2,10 @@ import {
   GENERATION_FORMAT_IDS,
   type GenerationFormat,
 } from '@org/shared';
-import type { GenerationOptions } from './llm-provider';
+import type { BrandVoice, GenerationOptions } from './llm-provider';
 import {
+  buildReplyInstruction,
+  buildReplyPrompt,
   buildResponseSchema,
   buildSystemInstruction,
   parseRepurposedContent,
@@ -191,5 +193,117 @@ describe('buildSystemInstruction', () => {
     expect(instruction).not.toMatch(/Additional tone guidance/);
     expect(instruction).not.toMatch(/Write for this audience/);
     expect(instruction).not.toMatch(/brand\/style guidance/);
+  });
+});
+
+/** A fully-populated brand voice for the reply-prompt tests. */
+function voice(overrides: Partial<BrandVoice> = {}): BrandVoice {
+  return {
+    tone: 'professional',
+    customTone: null,
+    audience: null,
+    guidance: null,
+    emojis: true,
+    hashtags: true,
+    language: 'English',
+    ...overrides,
+  };
+}
+
+describe('buildReplyInstruction', () => {
+  it('always states the base role, channel and platform context', () => {
+    const instruction = buildReplyInstruction({
+      platform: 'facebook',
+      channel: 'comment',
+      participantName: 'Amara',
+      transcript: 'Amara: hi',
+      voice: voice(),
+    });
+    expect(instruction).toMatch(/social inbox/);
+    expect(instruction).toMatch(/This is a comment on facebook\./);
+    expect(instruction).toMatch(/clear, credible, and polished tone/);
+  });
+
+  it.each<{ label: string; voice: BrandVoice; expected: RegExp }>([
+    {
+      label: 'emojis disabled',
+      voice: voice({ emojis: false }),
+      expected: /Do not use any emojis\./,
+    },
+    {
+      label: 'emojis enabled',
+      voice: voice({ emojis: true }),
+      expected: /may use an emoji/,
+    },
+    {
+      label: 'hashtags disabled',
+      voice: voice({ hashtags: false }),
+      expected: /Do not include any hashtags\./,
+    },
+    {
+      label: 'audience injected',
+      voice: voice({ audience: 'B2B founders' }),
+      expected: /audience is: B2B founders\./,
+    },
+    {
+      label: 'custom tone injected',
+      voice: voice({ customTone: 'a dry wit' }),
+      expected: /Additional tone guidance: a dry wit/,
+    },
+    {
+      label: 'brand guidance injected',
+      voice: voice({ guidance: 'Never say synergy' }),
+      expected: /brand\/style guidance: Never say synergy/,
+    },
+    {
+      label: 'language injected',
+      voice: voice({ language: 'Spanish' }),
+      expected: /Write the reply in Spanish\./,
+    },
+  ])('reflects $label', ({ voice: v, expected }) => {
+    const instruction = buildReplyInstruction({
+      platform: 'x',
+      channel: 'mention',
+      participantName: 'Priya',
+      transcript: 'Priya: hi',
+      voice: v,
+    });
+    expect(instruction).toMatch(expected);
+  });
+
+  it('appends a per-reply instruction when provided, and omits it otherwise', () => {
+    const withSteer = buildReplyInstruction({
+      platform: 'facebook',
+      channel: 'message',
+      participantName: 'Daniel',
+      transcript: 'Daniel: hi',
+      instruction: 'offer a 10% code',
+      voice: voice(),
+    });
+    expect(withSteer).toMatch(/specific instruction for this reply: offer a 10% code/);
+
+    const withoutSteer = buildReplyInstruction({
+      platform: 'facebook',
+      channel: 'message',
+      participantName: 'Daniel',
+      transcript: 'Daniel: hi',
+      voice: voice(),
+    });
+    expect(withoutSteer).not.toMatch(/specific instruction for this reply/);
+  });
+});
+
+describe('buildReplyPrompt', () => {
+  it('frames the transcript with the participant name and a reply cue', () => {
+    const prompt = buildReplyPrompt({
+      platform: 'facebook',
+      channel: 'comment',
+      participantName: 'Amara Okafor',
+      transcript: 'Amara Okafor: Do you support enterprise?',
+      voice: voice(),
+    });
+    expect(prompt).toContain('Amara Okafor');
+    expect(prompt).toContain('Do you support enterprise?');
+    expect(prompt).toMatch(/Write the brand's next reply\./);
   });
 });

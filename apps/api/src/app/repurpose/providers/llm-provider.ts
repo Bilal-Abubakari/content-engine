@@ -1,7 +1,9 @@
 import type {
   ContentTone,
   GenerationFormat,
+  InboxChannel,
   RepurposedContent,
+  SocialPlatform,
 } from '@org/shared';
 import type { SourceType } from '../repurpose.service';
 
@@ -37,6 +39,24 @@ export interface LlmGenerationRequest {
   options: GenerationOptions;
 }
 
+/** The brand-voice subset of {@link GenerationOptions} — everything except the
+ * output formats, which don't apply when drafting a conversational reply. */
+export type BrandVoice = Omit<GenerationOptions, 'formats'>;
+
+/** Everything a provider needs to draft an on-brand reply to an inbox thread. */
+export interface ReplyDraftRequest {
+  platform: SocialPlatform;
+  channel: InboxChannel;
+  /** Display name of the person being replied to. */
+  participantName: string;
+  /** The thread oldest-to-newest, one `Name: text` line per item. */
+  transcript: string;
+  /** Optional steer, e.g. "apologetic" or "offer a 10% code". */
+  instruction?: string;
+  /** The user's resolved brand voice, applied to the draft. */
+  voice: BrandVoice;
+}
+
 /**
  * Strategy interface every model integration implements. {@link RepurposeService}
  * depends only on this contract, so swapping Claude for OpenAI, Gemini or a
@@ -54,6 +74,13 @@ export interface LlmProvider {
    * (unselected formats are omitted); throws with a clear reason on failure.
    */
   generate(request: LlmGenerationRequest): Promise<RepurposedContent>;
+
+  /**
+   * Draft a short, on-brand reply to an inbox conversation. Reuses the same
+   * model + voice settings as {@link generate}, so the unified inbox speaks in
+   * the user's configured tone. The user edits the draft before sending.
+   */
+  draftReply(request: ReplyDraftRequest): Promise<string>;
 }
 
 /** DI token the service injects; bound to a concrete provider in the module. */

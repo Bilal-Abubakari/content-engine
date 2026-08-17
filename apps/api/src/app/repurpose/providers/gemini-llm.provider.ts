@@ -4,6 +4,7 @@ import type {
   GenerationOptions,
   LlmGenerationRequest,
   LlmProvider,
+  ReplyDraftRequest,
 } from './llm-provider';
 
 /** Construction options for {@link GeminiLlmProvider}. */
@@ -92,6 +93,21 @@ export class GeminiLlmProvider implements LlmProvider {
     return parseRepurposedContent(raw, options.formats);
   }
 
+  async draftReply(request: ReplyDraftRequest): Promise<string> {
+    const response = await this.client.models.generateContent({
+      model: this.options.model,
+      contents: buildReplyPrompt(request),
+      config: {
+        systemInstruction: buildReplyInstruction(request),
+      },
+    });
+    const raw = response.text?.trim();
+    if (!raw) {
+      throw new Error('Gemini returned an empty reply draft.');
+    }
+    return raw;
+  }
+
   /** Frame the source for the model. URL sources arrive as extracted article text. */
   private buildPrompt({ source, sourceType }: LlmGenerationRequest): string {
     const label =
@@ -143,6 +159,61 @@ export function buildSystemInstruction(options: GenerationOptions): string {
   lines.push(`Write all content in ${options.language}.`);
 
   return lines.join(' ');
+}
+
+/** System prompt fixing the assistant's role when drafting an inbox reply. */
+const REPLY_SYSTEM_INSTRUCTION =
+  'You are ContentEngine, replying on behalf of a brand to a message in its ' +
+  'social inbox. Write a concise, helpful, genuinely human reply directly to ' +
+  'the person. Address their actual question or comment, never invent facts, ' +
+  'and keep it to a few sentences. Avoid em dashes entirely; use commas, ' +
+  'periods, or shorter sentences instead. Return only the reply text, with no ' +
+  'preamble, quotes, or signature.';
+
+/**
+ * Compose the reply system instruction from the base role plus the user's
+ * resolved brand voice and any per-reply steer. Exported so the prompt
+ * composition can be unit-tested without a live API call.
+ */
+export function buildReplyInstruction(request: ReplyDraftRequest): string {
+  const { voice, platform, channel, instruction } = request;
+  const lines: string[] = [REPLY_SYSTEM_INSTRUCTION];
+
+  lines.push(`This is a ${channel} on ${platform}.`);
+  lines.push(`Write in a ${TONE_LABEL[voice.tone]} tone.`);
+  if (voice.customTone) {
+    lines.push(`Additional tone guidance: ${voice.customTone}`);
+  }
+  if (voice.audience) {
+    lines.push(`The brand's audience is: ${voice.audience}.`);
+  }
+  if (voice.guidance) {
+    lines.push(`Follow this brand/style guidance: ${voice.guidance}`);
+  }
+  lines.push(
+    voice.emojis
+      ? 'You may use an emoji where it feels natural.'
+      : 'Do not use any emojis.',
+  );
+  lines.push(
+    voice.hashtags
+      ? 'You may add a hashtag only if it genuinely fits a reply.'
+      : 'Do not include any hashtags.',
+  );
+  lines.push(`Write the reply in ${voice.language}.`);
+  if (instruction?.trim()) {
+    lines.push(`Follow this specific instruction for this reply: ${instruction.trim()}`);
+  }
+
+  return lines.join(' ');
+}
+
+/** Frame the thread transcript for the model to reply to. */
+export function buildReplyPrompt(request: ReplyDraftRequest): string {
+  return (
+    `Here is the conversation with ${request.participantName}, oldest message ` +
+    `first:\n\n${request.transcript}\n\nWrite the brand's next reply.`
+  );
 }
 
 /**

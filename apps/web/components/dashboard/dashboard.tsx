@@ -25,6 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Hint } from '../tour/hint';
 import { TourLauncher } from '../tour/tour-launcher';
 import { TourProvider } from '../tour/tour-provider';
+import { InboxNavLink } from './inbox-nav-link';
 import { PlanPanel } from './plan-panel';
 import { ResultsGrid } from './results-grid';
 
@@ -143,6 +144,7 @@ export function Dashboard({
               <Link2 className="h-4 w-4" />
               Manage connections
             </Link>
+            <InboxNavLink />
             <Link
               href="/dashboard/history"
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"

@@ -60,7 +60,11 @@ export const ModelName = {
   UsageRecord: 'UsageRecord',
   RepurposeJob: 'RepurposeJob',
   SocialConnection: 'SocialConnection',
-  SocialPost: 'SocialPost'
+  SocialPost: 'SocialPost',
+  Conversation: 'Conversation',
+  InboxItem: 'InboxItem',
+  SyncCursor: 'SyncCursor',
+  WebhookEvent: 'WebhookEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -224,6 +228,69 @@ export const SocialPostScalarFieldEnum = {
 } as const
 
 export type SocialPostScalarFieldEnum = (typeof SocialPostScalarFieldEnum)[keyof typeof SocialPostScalarFieldEnum]
+
+
+export const ConversationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  connectionId: 'connectionId',
+  platform: 'platform',
+  channel: 'channel',
+  externalId: 'externalId',
+  accountName: 'accountName',
+  participantExternalId: 'participantExternalId',
+  participantName: 'participantName',
+  participantAvatarUrl: 'participantAvatarUrl',
+  snippet: 'snippet',
+  status: 'status',
+  unreadCount: 'unreadCount',
+  lastActivityAt: 'lastActivityAt',
+  snoozedUntil: 'snoozedUntil',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ConversationScalarFieldEnum = (typeof ConversationScalarFieldEnum)[keyof typeof ConversationScalarFieldEnum]
+
+
+export const InboxItemScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channel: 'channel',
+  direction: 'direction',
+  text: 'text',
+  authorExternalId: 'authorExternalId',
+  authorName: 'authorName',
+  authorAvatarUrl: 'authorAvatarUrl',
+  permalink: 'permalink',
+  externalId: 'externalId',
+  createdAt: 'createdAt'
+} as const
+
+export type InboxItemScalarFieldEnum = (typeof InboxItemScalarFieldEnum)[keyof typeof InboxItemScalarFieldEnum]
+
+
+export const SyncCursorScalarFieldEnum = {
+  id: 'id',
+  connectionId: 'connectionId',
+  channel: 'channel',
+  cursor: 'cursor',
+  lastSyncedAt: 'lastSyncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SyncCursorScalarFieldEnum = (typeof SyncCursorScalarFieldEnum)[keyof typeof SyncCursorScalarFieldEnum]
+
+
+export const WebhookEventScalarFieldEnum = {
+  id: 'id',
+  platform: 'platform',
+  externalId: 'externalId',
+  receivedAt: 'receivedAt'
+} as const
+
+export type WebhookEventScalarFieldEnum = (typeof WebhookEventScalarFieldEnum)[keyof typeof WebhookEventScalarFieldEnum]
 
 
 export const SortOrder = {
