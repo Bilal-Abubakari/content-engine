@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LogOut, Sparkles } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { LogoMark } from './brand/logo-mark';
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -17,9 +18,7 @@ export function Navbar() {
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-fuchsia-500 shadow-lg shadow-brand-500/30">
-            <Sparkles className="h-4 w-4 text-white" />
-          </span>
+          <LogoMark className="h-8 w-8 shadow-lg shadow-brand-500/20" />
           <span className="text-lg tracking-tight">ContentEngine</span>
         </Link>
 

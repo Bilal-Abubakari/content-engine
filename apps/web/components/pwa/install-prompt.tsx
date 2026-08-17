@@ -1,8 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Download, Share, SquarePlus, X } from 'lucide-react';
+import { Share, SquarePlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { LogoMark } from '@/components/brand/logo-mark';
 
 /**
  * The `beforeinstallprompt` event (Chromium only) isn't in the DOM lib types, so
@@ -138,9 +139,7 @@ export function InstallPrompt() {
           className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:bottom-4"
         >
           <div className="glass mx-auto flex max-w-md items-center gap-3 p-3 shadow-2xl">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-white">
-              <Download className="h-5 w-5" />
-            </span>
+            <LogoMark className="h-11 w-11 rounded-xl" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">Install ContentEngine</p>
               <p className="truncate text-xs text-slate-400">
