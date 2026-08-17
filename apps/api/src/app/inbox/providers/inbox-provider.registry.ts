@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { SOCIAL_PLATFORMS, type SocialPlatform } from '@org/shared';
 import type { InboxProvider } from './inbox-provider';
 import { MockInboxProvider } from './mock-inbox.provider';
@@ -12,7 +12,6 @@ import { MockInboxProvider } from './mock-inbox.provider';
  */
 @Injectable()
 export class InboxProviderRegistry {
-  private readonly logger = new Logger(InboxProviderRegistry.name);
   private readonly providers = new Map<SocialPlatform, InboxProvider>();
 
   constructor() {
