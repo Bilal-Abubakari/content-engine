@@ -10,7 +10,6 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
-  Camera,
   Globe,
   Heart,
   ImagePlus,
@@ -22,21 +21,25 @@ import {
   Send,
   Share2,
   ThumbsUp,
-  Users,
   X as CloseIcon,
   type LucideIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useEffect } from 'react';
-import { LinkedInIcon, XIcon } from '../icons/brand-icons';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  XIcon,
+} from '../icons/brand-icons';
 
 type Glyph = ComponentType<SVGProps<SVGSVGElement>> | LucideIcon;
 
 const PLATFORM_ICON: Record<SocialPlatform, Glyph> = {
   linkedin: LinkedInIcon,
   x: XIcon,
-  facebook: Users,
-  instagram: Camera,
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
   tiktok: Music2,
 };
 

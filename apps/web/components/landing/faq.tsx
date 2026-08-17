@@ -14,7 +14,12 @@ const FAQS: QA[] = [
   {
     question: 'Is there really a free plan?',
     answer:
-      'Yes. The Free plan gives you 5 repurposes every month with access to every output format — no credit card required.',
+      'Yes. The Free plan gives you 5 repurposes every month with access to every output format and the unified inbox — no credit card required.',
+  },
+  {
+    question: 'What is the unified inbox?',
+    answer:
+      'It is the second half of ContentEngine: one place to read and reply to every message, comment, mention, and review across your connected platforms. It updates live, drafts replies in your brand voice, and tracks read, replied, snoozed, and archived states so your whole team stays in sync. Use it on its own or alongside repurposing — you decide.',
   },
   {
     question: 'Why use this instead of ChatGPT, Gemini, or Claude?',

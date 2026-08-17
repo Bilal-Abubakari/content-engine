@@ -22,19 +22,20 @@ const CHATBOT: Column = {
     'Copy each answer out and reformat it by hand',
     'Re-explain your brand voice in every new chat',
     'No publishing, scheduling, media, or history',
+    'No inbox — you chase replies across a dozen separate apps',
   ],
 };
 
 const ENGINE: Column = {
   label: 'ContentEngine',
-  caption: 'Purpose-built to turn one idea into a week of platform-native posts.',
+  caption: 'A platform built to create the content and engage the conversations it sparks.',
   highlighted: true,
   points: [
     'One paste → tweets, LinkedIn, Facebook, a newsletter, a thread, and more, all at once',
     'Reads your URL or transcript for you — no prompt to write',
     'Publish to LinkedIn, X & Facebook in a click, with media attached',
-    'Your tone and formats saved once, applied to every generation',
-    'Usage, history, and shareable results built in',
+    'Every reply, comment, mention & review in one unified inbox',
+    'AI-drafted replies in the same brand voice, saved once and applied everywhere',
   ],
 };
 
@@ -84,9 +85,10 @@ export function Comparison() {
           Why not just use <span className="text-gradient">ChatGPT?</span>
         </h2>
         <p className="mt-4 text-lg text-slate-400">
-          You can — and we love those tools. But repurposing one idea into
-          every platform means dozens of prompts, copy-paste, and reformatting.
-          ContentEngine does that whole workflow in a single click.
+          You can — and we love those tools. But repurposing one idea into every
+          platform means dozens of prompts, copy-paste, and reformatting — and a
+          chatbot still can't gather your replies. ContentEngine does the whole
+          create-and-engage workflow in one place.
         </p>
       </Reveal>
 

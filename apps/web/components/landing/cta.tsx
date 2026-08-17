@@ -17,12 +17,12 @@ export function Cta() {
           className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-500/25 blur-[120px]"
         />
         <h2 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl">
-          Your next week of content is{' '}
-          <span className="text-gradient">one paste away</span>
+          Create more.{' '}
+          <span className="text-gradient">Chase replies less.</span>
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
           Start free — no credit card, no setup. Turn your first link into a
-          full content calendar in the next 30 seconds.
+          week of content, and every reply into one tidy inbox.
         </p>
 
         <div className="mt-10 flex justify-center">
@@ -39,7 +39,7 @@ export function Cta() {
               onClick={() => signIn(undefined, { callbackUrl: '/dashboard' })}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand-500/40 transition hover:opacity-90"
             >
-              Start repurposing free
+              Start free
               <ArrowRight className="h-4 w-4" />
             </button>
           )}

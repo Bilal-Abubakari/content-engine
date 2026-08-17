@@ -40,24 +40,25 @@ export function Hero() {
           className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-slate-300"
         >
           <Sparkles className="h-3.5 w-3.5 text-brand-400" />
-          AI-powered content repurposing
+          Two products. One platform.
         </motion.span>
 
         <motion.h1
           variants={item}
           className="text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl"
         >
-          Turn one link into a{' '}
-          <span className="text-gradient">week of content</span>
+          Create everywhere.{' '}
+          <span className="text-gradient">Engage from one place.</span>
         </motion.h1>
 
         <motion.p
           variants={item}
           className="mt-6 max-w-2xl text-pretty text-lg text-slate-300 sm:text-xl"
         >
-          Paste a URL or drop in raw text. ContentEngine instantly reshapes it
-          into tweets, LinkedIn and Facebook posts, a newsletter, a full thread,
-          plus Instagram and TikTok drafts — ready to copy and publish.
+          ContentEngine is two products in one. Repurpose a single idea into a
+          week of platform-native posts — and manage every message, comment,
+          mention, and review across your socials from one unified inbox. Use
+          one, or both.
         </motion.p>
 
         <motion.div
@@ -66,16 +67,16 @@ export function Hero() {
         >
           <GlowingCta authed={authed} />
           <Link
-            href="#how-it-works"
+            href="#products"
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-6 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/5"
           >
             <Link2 className="h-4 w-4" />
-            See how it works
+            Explore both products
           </Link>
         </motion.div>
 
         <motion.p variants={item} className="mt-6 text-sm text-slate-500">
-          No credit card required · 7 formats · Instant results
+          No credit card required · Repurpose + Inbox · Use one or both
         </motion.p>
       </motion.div>
     </section>
@@ -83,7 +84,7 @@ export function Hero() {
 }
 
 function GlowingCta({ authed }: { authed: boolean }) {
-  const label = authed ? 'Open dashboard' : 'Start repurposing free';
+  const label = authed ? 'Open dashboard' : 'Start free';
 
   const button = (
     <motion.span

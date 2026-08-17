@@ -23,8 +23,8 @@ const STEPS: Step[] = [
   },
   {
     icon: Send,
-    title: '3. Copy, tweak, publish',
-    body: 'Grab tweets, a LinkedIn post, a newsletter and a thread. Fine-tune and ship everywhere.',
+    title: '3. Publish, then engage',
+    body: 'Ship everywhere in a click — then handle every reply it earns from your unified inbox.',
   },
 ];
 
@@ -33,11 +33,12 @@ export function HowItWorks() {
     <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24">
       <Reveal className="mx-auto max-w-2xl text-center">
         <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          From link to launch in{' '}
-          <span className="text-gradient">three steps</span>
+          From link to launch —{' '}
+          <span className="text-gradient">and beyond</span>
         </h2>
         <p className="mt-4 text-lg text-slate-400">
-          No blank page. No prompt engineering. Just paste and publish.
+          No blank page. No prompt engineering. Paste, publish, and keep the
+          conversation going from one inbox.
         </p>
       </Reveal>
 
