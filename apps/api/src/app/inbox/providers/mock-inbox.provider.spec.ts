@@ -95,7 +95,6 @@ describe('MockInboxProvider', () => {
   it('returns a sentinel cursor on the first pull, then nothing after', async () => {
     const provider = new MockInboxProvider('facebook');
     const first = await provider.fetch(baseFetch('facebook', 'comment'));
-    expect(first.nextCursor).toBe('mock-seeded');
     expect(first.conversations.length).toBeGreaterThan(0);
 
     // A second pull carrying the returned cursor must be a no-op so repeated
@@ -105,6 +104,27 @@ describe('MockInboxProvider', () => {
     );
     expect(second.conversations).toHaveLength(0);
     expect(second.nextCursor).toBe(first.nextCursor);
+  });
+
+  it('re-seeds a connection left on an older seed version', async () => {
+    // Bumping the sentinel is how a grown seed set reaches accounts that were
+    // already connected — without it they'd have to be relinked to see it.
+    const provider = new MockInboxProvider('facebook');
+    const stale = await provider.fetch(
+      baseFetch('facebook', 'comment', 'mock-seeded'),
+    );
+    expect(stale.conversations.length).toBeGreaterThan(0);
+    expect(stale.nextCursor).not.toBe('mock-seeded');
+  });
+
+  it('keys thread ids off the participant, not their position in the seed set', async () => {
+    const provider = new MockInboxProvider('facebook');
+    const result = await provider.fetch(baseFetch('facebook', 'comment'));
+    // Stable ids are what make a re-seed a top-up rather than a rewrite of the
+    // threads a user has already read, replied to or archived.
+    for (const convo of result.conversations) {
+      expect(convo.externalId).not.toMatch(/-\d+-thread$/);
+    }
   });
 
   it('assigns stable, unique external ids across a conversation and its items', async () => {

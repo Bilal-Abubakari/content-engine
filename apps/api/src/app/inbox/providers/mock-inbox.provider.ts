@@ -14,8 +14,12 @@ import type {
   NormalizedConversation,
 } from './inbox-provider';
 
-/** Sentinel cursor set after the first pull so a demo inbox seeds exactly once. */
-const SEEDED_CURSOR = 'mock-seeded';
+/**
+ * Sentinel cursor set after a pull so a demo inbox seeds exactly once — bumped
+ * whenever {@link SEED_TEMPLATES} grows, so already-connected accounts pick the
+ * new threads up on their next sync instead of having to be reconnected.
+ */
+const SEEDED_CURSOR = 'mock-seed-v2';
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -29,7 +33,8 @@ interface SeedLine {
 /** A seed thread template, resolved against a platform's real capabilities. */
 interface SeedTemplate {
   channel: InboxChannel;
-  participant: { name: string; avatar: string };
+  /** `id` is a stable slug: it keys both the avatar and the thread's external id. */
+  participant: { name: string; id: string };
   /** Oldest-to-newest turns in the thread. */
   lines: SeedLine[];
   /** How long ago the most recent line landed. */
@@ -66,7 +71,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   // ---------------------------------------------------------------- messages
   {
     channel: 'message',
-    participant: { name: 'Daniel Reyes', avatar: 'daniel' },
+    participant: { name: 'Daniel Reyes', id: 'daniel' },
     lines: [
       them('Hi! Is the launch discount still active?'),
       them('And does it apply to annual billing too?'),
@@ -75,7 +80,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Sofia Marchetti', avatar: 'sofia' },
+    participant: { name: 'Sofia Marchetti', id: 'sofia' },
     lines: [
       them("We're a 12-person agency. Do you have team seats?"),
       us('We do — team plans start at 5 seats and include shared brand voices.'),
@@ -85,7 +90,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Grace Bennett', avatar: 'grace' },
+    participant: { name: 'Grace Bennett', id: 'grace' },
     lines: [
       them(
         'Loved the demo. One question — how do you handle multiple brand voices on one account?',
@@ -95,7 +100,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Hiroshi Tanaka', avatar: 'hiroshi' },
+    participant: { name: 'Hiroshi Tanaka', id: 'hiroshi' },
     lines: [
       them('My scheduled post went out twice this morning. Can you check?'),
       us(
@@ -106,7 +111,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Lena Fischer', avatar: 'lena' },
+    participant: { name: 'Lena Fischer', id: 'lena' },
     lines: [
       them('Do you support scheduling in a different timezone to my account default?'),
     ],
@@ -114,7 +119,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Marcus Bell', avatar: 'marcus' },
+    participant: { name: 'Marcus Bell', id: 'marcus' },
     lines: [
       them('Hey, quick one:'),
       them('can I export everything I generated last month as a CSV?'),
@@ -124,7 +129,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Aisha Rahman', avatar: 'aisha' },
+    participant: { name: 'Aisha Rahman', id: 'aisha' },
     lines: [
       them('Invoice #4821 has the wrong VAT number — can it be reissued?'),
       us("Reissued and emailed to you, with the corrected VAT number. Thanks for flagging."),
@@ -134,7 +139,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Oliver Grant', avatar: 'oliver' },
+    participant: { name: 'Oliver Grant', id: 'oliver' },
     lines: [
       them('Is there an API? We want to push drafts from our own CMS.'),
     ],
@@ -142,7 +147,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Chloé Dubois', avatar: 'chloe' },
+    participant: { name: 'Chloé Dubois', id: 'chloe' },
     lines: [
       them("Cancelled by mistake — is my content still there if I resubscribe?"),
       us('It is. Nothing is deleted for 90 days, so resubscribing restores everything.'),
@@ -151,7 +156,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'message',
-    participant: { name: 'Yusuf Adeyemi', avatar: 'yusuf' },
+    participant: { name: 'Yusuf Adeyemi', id: 'yusuf' },
     lines: [
       them('Following up on my last message about the enterprise quote 🙂'),
     ],
@@ -161,7 +166,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   // ---------------------------------------------------------------- comments
   {
     channel: 'comment',
-    participant: { name: 'Amara Okafor', avatar: 'amara' },
+    participant: { name: 'Amara Okafor', id: 'amara' },
     lines: [
       them(
         'This thread is exactly what my team needed — do you have a version for enterprise plans?',
@@ -171,13 +176,13 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'comment',
-    participant: { name: 'Ben Whitaker', avatar: 'ben' },
+    participant: { name: 'Ben Whitaker', id: 'ben' },
     lines: [them('Saving this one. The before/after examples sold me.')],
     ageMs: 27 * MINUTE,
   },
   {
     channel: 'comment',
-    participant: { name: 'Tomás Silva', avatar: 'tomas' },
+    participant: { name: 'Tomás Silva', id: 'tomas' },
     lines: [
       them('Does this integrate with our existing scheduler, or is it standalone?'),
       us('Both — you can publish from here, or export and schedule wherever you already work.'),
@@ -186,13 +191,13 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'comment',
-    participant: { name: 'Nadia Petrova', avatar: 'nadia' },
+    participant: { name: 'Nadia Petrova', id: 'nadia' },
     lines: [them('Wait, does the free tier really include video captions?')],
     ageMs: 6 * HOUR,
   },
   {
     channel: 'comment',
-    participant: { name: 'Jamal Carter', avatar: 'jamal' },
+    participant: { name: 'Jamal Carter', id: 'jamal' },
     lines: [
       them('Tried it. The tone matching is genuinely good, not marketing-good.'),
       them('One nit: I wish the hashtag suggestions were regional.'),
@@ -201,13 +206,13 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'comment',
-    participant: { name: 'Elena Vargas', avatar: 'elena' },
+    participant: { name: 'Elena Vargas', id: 'elena' },
     lines: [them('How long does a 20-minute video take to process?')],
     ageMs: 15 * HOUR,
   },
   {
     channel: 'comment',
-    participant: { name: 'Rohan Mehta', avatar: 'rohan' },
+    participant: { name: 'Rohan Mehta', id: 'rohan' },
     lines: [
       them('Second this — regional hashtags would be huge for us in APAC.'),
       us("It's on the roadmap for this quarter. We'll shout when it ships."),
@@ -216,19 +221,19 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'comment',
-    participant: { name: 'Ingrid Larsen', avatar: 'ingrid' },
+    participant: { name: 'Ingrid Larsen', id: 'ingrid' },
     lines: [them('Is any of this stored for training? Asking for our legal team.')],
     ageMs: 2 * DAY,
   },
   {
     channel: 'comment',
-    participant: { name: 'Peter Njoroge', avatar: 'peter' },
+    participant: { name: 'Peter Njoroge', id: 'peter' },
     lines: [them('The pricing page 404s on mobile Safari for me.')],
     ageMs: 4 * DAY,
   },
   {
     channel: 'comment',
-    participant: { name: 'Mei Lin', avatar: 'mei' },
+    participant: { name: 'Mei Lin', id: 'mei' },
     lines: [
       them('Been using this for three months. Cut our repurposing time by about 70%.'),
     ],
@@ -238,7 +243,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   // ---------------------------------------------------------------- mentions
   {
     channel: 'mention',
-    participant: { name: 'Priya Nair', avatar: 'priya' },
+    participant: { name: 'Priya Nair', id: 'priya' },
     lines: [
       them(
         'Just shipped our newsletter using this workflow — massive time saver. Highly recommend @contentengine 🙌',
@@ -248,7 +253,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Devon Clarke', avatar: 'devon' },
+    participant: { name: 'Devon Clarke', id: 'devon' },
     lines: [
       them('anyone else using @contentengine for short-form? curious how it handles hooks'),
     ],
@@ -256,7 +261,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Fatima Zahra', avatar: 'fatima' },
+    participant: { name: 'Fatima Zahra', id: 'fatima' },
     lines: [
       them('One long-form post → 14 assets in under ten minutes with @contentengine. Thread 🧵'),
       us('This made our day. Thanks for sharing the full breakdown 💛'),
@@ -265,13 +270,13 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Alex Novak', avatar: 'alex' },
+    participant: { name: 'Alex Novak', id: 'alex' },
     lines: [them('@contentengine is the first AI tool that actually sounds like me.')],
     ageMs: 8 * HOUR,
   },
   {
     channel: 'mention',
-    participant: { name: 'Harper Quinn', avatar: 'harper' },
+    participant: { name: 'Harper Quinn', id: 'harper' },
     lines: [
       them('honestly @contentengine needs a better mobile editor, everything else is solid'),
     ],
@@ -279,7 +284,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Sean O’Malley', avatar: 'sean' },
+    participant: { name: 'Sean O’Malley', id: 'sean' },
     lines: [
       them('Comparing @contentengine and two competitors for our agency. Notes to follow.'),
     ],
@@ -287,7 +292,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Zanele Dlamini', avatar: 'zanele' },
+    participant: { name: 'Zanele Dlamini', id: 'zanele' },
     lines: [
       them('Shoutout to the @contentengine support team — sorted a billing issue in an hour.'),
       us('Thank you Zanele! Glad it was a quick one.'),
@@ -296,7 +301,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'mention',
-    participant: { name: 'Lucas Moreau', avatar: 'lucas' },
+    participant: { name: 'Lucas Moreau', id: 'lucas' },
     lines: [them('Week 4 with @contentengine — our posting cadence has tripled.')],
     ageMs: 9 * DAY,
   },
@@ -304,13 +309,13 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   // ----------------------------------------------------------------- reviews
   {
     channel: 'review',
-    participant: { name: 'Kwame Mensah', avatar: 'kwame' },
+    participant: { name: 'Kwame Mensah', id: 'kwame' },
     lines: [them('Five stars. Support replied within minutes and solved my issue. ⭐⭐⭐⭐⭐')],
     ageMs: 90 * MINUTE,
   },
   {
     channel: 'review',
-    participant: { name: 'Isabella Rossi', avatar: 'isabella' },
+    participant: { name: 'Isabella Rossi', id: 'isabella' },
     lines: [
       them('Recommends — the scheduling calendar alone replaced two other tools for us.'),
     ],
@@ -318,7 +323,7 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'review',
-    participant: { name: 'Tobias Hein', avatar: 'tobias' },
+    participant: { name: 'Tobias Hein', id: 'tobias' },
     lines: [
       them("Doesn't recommend. Video exports failed twice on a deadline day."),
       us(
@@ -329,19 +334,19 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     channel: 'review',
-    participant: { name: 'Amelia Wright', avatar: 'amelia' },
+    participant: { name: 'Amelia Wright', id: 'amelia' },
     lines: [them('Great value for a small team. Would like more analytics depth.')],
     ageMs: 2 * DAY,
   },
   {
     channel: 'review',
-    participant: { name: 'Ravi Shankar', avatar: 'ravi' },
+    participant: { name: 'Ravi Shankar', id: 'ravi' },
     lines: [them('Recommends. Onboarding took ten minutes and the results were usable.')],
     ageMs: 5 * DAY,
   },
   {
     channel: 'review',
-    participant: { name: 'Nora Haddad', avatar: 'nora' },
+    participant: { name: 'Nora Haddad', id: 'nora' },
     lines: [
       them('Solid tool, but I wish the mobile app let me approve drafts on the go.'),
     ],
@@ -354,17 +359,20 @@ const SEED_TEMPLATES: readonly SeedTemplate[] = [
  * conversations so the entire unified-inbox experience is demoable end-to-end
  * with zero API approvals. Every real integration implements the same
  * {@link InboxProvider} contract, so swapping this out is a one-line registry
- * change. Seeding is deterministic per pull: the first fetch returns the seed
- * set and a sentinel cursor; every later fetch returns nothing, so the sync
- * poller stays idempotent and tests are stable.
+ * change. Seeding is deterministic per pull: a fetch that hasn't seen the
+ * current {@link SEEDED_CURSOR} returns the seed set, and every fetch after it
+ * returns nothing, so the sync poller stays idempotent and tests are stable.
  */
 export class MockInboxProvider implements InboxProvider {
   constructor(readonly platform: InboxPlatform) {}
 
   async fetch(context: InboxFetchContext): Promise<InboxFetchResult> {
-    // Already seeded — a real provider would page forward from the cursor; the
-    // mock simply has nothing new, keeping repeated syncs a no-op.
-    if (context.cursor) {
+    // Already seeded with the current set — a real provider would page forward
+    // from the cursor; the mock simply has nothing new, keeping repeated syncs a
+    // no-op. A cursor from an older seed version falls through and re-seeds:
+    // thread ids are stable, so the caller dedupes and only the added threads
+    // land, sparing anyone a disconnect/reconnect to see them.
+    if (context.cursor === SEEDED_CURSOR) {
       return { conversations: [], nextCursor: context.cursor };
     }
 
@@ -375,8 +383,10 @@ export class MockInboxProvider implements InboxProvider {
     const conversations = SEED_TEMPLATES.filter(
       (t) => t.channel === context.channel && allowed.includes(t.channel),
     ).map(
-      (template, index): NormalizedConversation => {
-        const base = `mock-${this.platform}-${template.channel}-${index}`;
+      (template): NormalizedConversation => {
+        // Keyed by the participant slug rather than an array index, so
+        // inserting a template never re-points an existing thread's id.
+        const base = `mock-${this.platform}-${template.channel}-${template.participant.id}`;
         const newestAt = now - template.ageMs;
         return {
           externalId: `${base}-thread`,
@@ -385,7 +395,7 @@ export class MockInboxProvider implements InboxProvider {
           participant: {
             externalId: `${base}-user`,
             name: template.participant.name,
-            avatarUrl: avatar(template.participant.avatar),
+            avatarUrl: avatar(template.participant.id),
           },
           items: template.lines.map((line, lineIndex) => {
             // Space earlier lines a couple of minutes before the newest one.
@@ -400,7 +410,7 @@ export class MockInboxProvider implements InboxProvider {
                   ? {
                       externalId: `${base}-user`,
                       name: template.participant.name,
-                      avatarUrl: avatar(template.participant.avatar),
+                      avatarUrl: avatar(template.participant.id),
                     }
                   : { externalId: `${base}-self`, name: 'You', avatarUrl: null },
               permalink: null,
