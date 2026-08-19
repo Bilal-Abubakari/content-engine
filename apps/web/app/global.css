@@ -35,10 +35,6 @@ html,
 body {
   padding: 0;
   margin: 0;
-  /* A definite height chain down from the root, so `.app-frame` can size itself
-     as a percentage instead of in viewport units — see the note there. Content
-     taller than this still overflows and scrolls the document as usual. */
-  height: 100%;
 }
 
 html {
@@ -125,16 +121,23 @@ body {
      standalone (installed) app, so on a screen whose content was too short to
      scroll they rode up to wherever the content happened to end. A frame that
      is always exactly one viewport tall means the document can never be shorter
-     than the screen, so the case simply doesn't arise.
-
-     Sized as a percentage of `html` rather than in `vh`/`dvh`. An installed iOS
-     app resolves those units against a viewport it hasn't finished measuring on
-     the first frame, so the frame launched a little short and the tab bar sat
-     raised off the bottom edge until the first scroll forced a recalculation.
-     A percentage resolves against the initial containing block, which is right
-     immediately and never changes. */
+     than the screen, so the case simply doesn't arise. */
   .app-frame {
-    height: 100%;
+    height: 100vh; /* Fallback for iOS before 15.4, which has no dvh unit. */
+    height: 100dvh;
+  }
+
+  /* Installed, `dvh` is the wrong tool: there is no browser chrome left to
+     collapse, so nothing about the height is dynamic — but iOS still hasn't
+     settled the dynamic viewport on the first frame, which launched the app a
+     little short and left the tab bar riding above the bottom edge until a
+     scroll forced the recalculation. `vh` is static, so it is correct on the
+     very first paint, and it spans the full screen including the home-indicator
+     strip, which a percentage of the containing block does not. */
+  @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+    .app-frame {
+      height: 100vh;
+    }
   }
 
   /* The installed app's launch screen. Gated here rather than in JavaScript so
