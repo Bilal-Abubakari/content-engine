@@ -40,11 +40,15 @@ const TABS: Tab[] = [
  * unreachable one-handed) and is hidden from `md` up, where the header and
  * in-page navigation take over.
  *
- * It sits on the bottom edge as the last row of the {@link AppShell} frame
- * rather than by `position: fixed`, which an installed iOS app resolves against
- * the document and therefore drags up the screen on short pages.
+ * It is pinned to the bottom of the {@link AppShell} frame rather than by
+ * `position: fixed`, which an installed iOS app resolves against the document
+ * and therefore drags up the screen on short pages.
+ *
+ * `hidden` slides it off the bottom edge while the user is reading downward,
+ * the way X and most native feeds do — the bar is worth a fifth of the screen
+ * and none of it is useful mid-scroll.
  */
-export function TabBar() {
+export function TabBar({ hidden = false }: { hidden?: boolean }) {
   const pathname = usePathname();
   const unread = useUnreadCount();
 
@@ -55,9 +59,11 @@ export function TabBar() {
     .sort((a, b) => b.length - a.length)[0];
 
   return (
-    <nav
+    <motion.nav
       aria-label="Primary"
-      className="app-bar pb-safe z-40 shrink-0 border-t md:hidden"
+      animate={{ y: hidden ? '100%' : '0%' }}
+      transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+      className="app-bar pb-safe absolute inset-x-0 bottom-0 z-40 border-t md:hidden"
     >
       <ul className="flex items-stretch">
         {TABS.map(({ href, label, icon: Icon, badge }) => {
@@ -94,6 +100,6 @@ export function TabBar() {
           );
         })}
       </ul>
-    </nav>
+    </motion.nav>
   );
 }
