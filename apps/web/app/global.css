@@ -5,11 +5,16 @@
 :root {
   color-scheme: dark;
 
-  /* Notch / home-indicator insets, named so utilities can compose them. They
-     only resolve to non-zero once the viewport opts in with `viewport-fit=cover`
-     (set in app/layout.tsx). */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Notch / home-indicator insets, named so utilities can compose them.
+
+     In a browser tab these stay 0 on purpose. The browser already keeps content
+     clear of its own chrome, and iOS Safari reports a *dynamic*
+     safe-area-inset-bottom that grows while the toolbar is expanded — which is
+     precisely when a page is too short to scroll. Reading it there made the tab
+     bar and the floating buttons visibly lift off the bottom edge on short
+     pages and settle again once the page scrolled. */
+  --safe-top: 0px;
+  --safe-bottom: 0px;
 
   /* Height of the mobile tab bar, excluding its safe-area padding. Content
      areas reserve this much room so nothing hides behind the bar. */
@@ -17,6 +22,16 @@
 
   /* Combined height of the mobile app header (title row + notch inset). */
   --app-header-h: calc(3.25rem + var(--safe-top));
+}
+
+/* Installed (or fullscreen) — we own the whole screen, so now the insets are a
+   real notch and home indicator and are stable enough to pad against. Requires
+   `viewport-fit=cover`, set in app/layout.tsx. */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 html,
@@ -99,6 +114,17 @@ body {
   /* Translucent app chrome pinned to an edge of the screen. */
   .app-bar {
     @apply border-white/5 bg-slate-950/80 backdrop-blur-xl;
+  }
+
+  /* The installed app's launch screen. Gated here rather than in JavaScript so
+     it is painted (or not) on the very first frame — see SplashScreen. */
+  .splash {
+    display: none;
+  }
+  @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+    .splash {
+      display: grid;
+    }
   }
 }
 

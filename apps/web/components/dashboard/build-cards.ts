@@ -1,4 +1,8 @@
-import type { RepurposedContent, SocialPlatform } from '@org/shared';
+import type {
+  GenerationFormat,
+  RepurposedContent,
+  SocialPlatform,
+} from '@org/shared';
 import { Camera, Mail, MessagesSquare, Music2, Users } from 'lucide-react';
 import { LinkedInIcon, XIcon } from '../icons/brand-icons';
 import type { ContentCardProps } from './content-card';
@@ -109,12 +113,10 @@ export function platformContentText(
 }
 
 /**
- * The card field a platform's media attachments are keyed by, so publishing and
- * the preview can find the assets a user attached to that platform's card.
+ * The generation format that produces a platform's copy — what to ask
+ * `/api/repurpose` for when adapting a draft for that platform.
  */
-export function platformMediaField(
-  platform: SocialPlatform,
-): keyof RepurposedContent {
+export function platformFormat(platform: SocialPlatform): GenerationFormat {
   switch (platform) {
     case 'x':
       return 'tweets';
@@ -127,4 +129,16 @@ export function platformMediaField(
     case 'tiktok':
       return 'tiktok';
   }
+}
+
+/**
+ * The card field a platform's media attachments are keyed by, so publishing and
+ * the preview can find the assets a user attached to that platform's card. Media
+ * hangs off the card that holds the platform's copy, so this is the same field
+ * as {@link platformFormat}.
+ */
+export function platformMediaField(
+  platform: SocialPlatform,
+): keyof RepurposedContent {
+  return platformFormat(platform);
 }

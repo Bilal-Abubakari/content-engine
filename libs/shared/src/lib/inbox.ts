@@ -12,7 +12,7 @@
  * Dependency-light on purpose: no Prisma/provider SDK imports leak in here.
  */
 
-import type { InboxPlatform } from './social.js';
+import { INBOX_PLATFORM_CATALOGUE, type InboxPlatform } from './social.js';
 
 /**
  * The kind of interaction an inbox item represents. A `message` is a private
@@ -185,6 +185,33 @@ export interface InboxStreamEvent {
   conversation: ConversationView;
   /** Unread total after this event, so the nav badge stays in sync. */
   unreadTotal: number;
+}
+
+/**
+ * The channels a platform's API can actually surface, in display order.
+ *
+ * The single definition of that mapping: the API polls exactly these channels,
+ * the mock provider seeds exactly these channels, and the UI advertises exactly
+ * these channels — so a capability change can never leave the three disagreeing.
+ */
+export function inboxChannelsFor(platform: InboxPlatform): InboxChannel[] {
+  const caps = INBOX_PLATFORM_CATALOGUE[platform].inbox;
+  const channels: InboxChannel[] = [];
+  if (caps.messages) {
+    channels.push('message');
+  }
+  if (caps.comments) {
+    channels.push('comment');
+  }
+  if (caps.mentions) {
+    channels.push('mention');
+  }
+  // Recommendations are a Facebook Page concept, and the Graph API returns them
+  // under the same permission scope as Page comments.
+  if (platform === 'facebook' && caps.comments) {
+    channels.push('review');
+  }
+  return channels;
 }
 
 /** Type guard narrowing an arbitrary string to an InboxChannel. */

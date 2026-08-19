@@ -136,7 +136,9 @@ export function InstallPrompt() {
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
-          className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:bottom-4"
+          // Clears the mobile tab bar rather than covering it — both are
+          // bottom-pinned chrome, and the tab bar is only hidden from `md` up.
+          className="fixed inset-x-0 bottom-[calc(var(--tab-bar-h)+var(--safe-bottom)+0.75rem)] z-40 px-4 md:bottom-4"
         >
           <div className="glass mx-auto flex max-w-md items-center gap-3 p-3 shadow-2xl">
             <LogoMark className="h-11 w-11 rounded-xl" />

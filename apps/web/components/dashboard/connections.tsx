@@ -25,6 +25,7 @@ import {
   XIcon,
 } from '../icons/brand-icons';
 import { Hint } from '../tour/hint';
+import { connectionUses } from './connection-uses';
 
 type Glyph = ComponentType<SVGProps<SVGSVGElement>> | LucideIcon;
 
@@ -126,14 +127,14 @@ export function Connections() {
         Connections
       </h1>
       <p className="text-sm text-slate-400 md:mt-2 md:text-base">
-        Link your social accounts to publish repurposed content directly from
-        the dashboard.
+        Link an account once and it powers the whole app: publishing and
+        scheduling repurposed content, writing a new post, and pulling that
+        platform's messages, comments and mentions into your inbox.
       </p>
 
       <Hint id="connections-intro" title="One-time setup" className="mt-6">
-        Connect an account once and the publish button on every generated card
-        will post to it — no copy-pasting between tabs. You can disconnect at
-        any time.
+        Each card lists what connecting it unlocks. Nothing else needs setting
+        up — and you can disconnect at any time.
       </Hint>
 
       {flash && (
@@ -208,6 +209,19 @@ export function Connections() {
                   )}
                 </div>
               </div>
+
+              {/* Spells out the three features one connection feeds, so the
+                  page reads as capabilities rather than plumbing. */}
+              <ul className="flex flex-wrap gap-1.5">
+                {connectionUses(platform).map((use) => (
+                  <li
+                    key={use}
+                    className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-400"
+                  >
+                    {use}
+                  </li>
+                ))}
+              </ul>
 
               {meta.note && (
                 <p className="text-xs leading-relaxed text-slate-500">{meta.note}</p>

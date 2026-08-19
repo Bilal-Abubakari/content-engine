@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
+import { SplashScreen } from '@/components/pwa/splash-screen';
 import { Navbar } from '@/components/navbar';
 import { Providers } from './providers';
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans">
+        <SplashScreen />
         <Providers>
           <Navbar />
           {children}

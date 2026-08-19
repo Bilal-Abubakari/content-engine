@@ -1,6 +1,7 @@
 import { parseServerEnv } from './env';
 
 const BASE = {
+  NODE_ENV: 'test',
   AUTH_SECRET: 'secret-value',
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
 } as NodeJS.ProcessEnv;
