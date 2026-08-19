@@ -46,15 +46,18 @@ export function HistoryView() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-7xl px-6 pb-24 pt-12">
+    <main className="mx-auto max-w-7xl px-4 pb-12 pt-5 sm:px-6 sm:pb-24 sm:pt-12">
       <Breadcrumbs
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'History' },
         ]}
       />
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">History</h1>
-      <p className="mt-2 text-slate-400">
+      {/* The mobile app bar already titles this screen. */}
+      <h1 className="hidden text-3xl font-bold tracking-tight md:block lg:text-4xl">
+        History
+      </h1>
+      <p className="text-sm text-slate-400 md:mt-2 md:text-base">
         Revisit anything you&apos;ve repurposed and reopen it in one click.
       </p>
 
@@ -63,7 +66,7 @@ export function HistoryView() {
         cards exactly as they were — nothing is ever lost.
       </Hint>
 
-      <section className="glass mt-8 p-5 sm:p-6">
+      <section className="glass mt-6 p-4 sm:mt-8 sm:p-6">
         <header className="mb-4 flex items-center gap-2">
           <Clock className="h-4 w-4 text-slate-400" />
           <h2 className="text-sm font-semibold text-slate-200">
@@ -92,7 +95,7 @@ export function HistoryView() {
               <li key={item.id}>
                 <Link
                   href={`/dashboard?c=${encodeURIComponent(item.id)}`}
-                  className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-slate-900/40 px-4 py-3 text-left transition hover:bg-white/5"
+                  className="tap flex min-h-14 w-full items-center gap-3 rounded-xl border border-white/5 bg-slate-900/40 px-4 py-3 text-left hover:bg-white/5"
                 >
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/5 text-slate-300">
                     {item.sourceType === 'url' ? (

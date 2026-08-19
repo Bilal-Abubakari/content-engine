@@ -264,7 +264,7 @@ export function ContentCard({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="glass mb-6 break-inside-avoid p-5"
+      className="glass mb-5 break-inside-avoid p-4 sm:mb-6 sm:p-5"
     >
       <header className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -286,14 +286,14 @@ export function ContentCard({
             <>
               <button
                 onClick={saveEdit}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-brand-500/30 transition hover:opacity-90"
+                className="tap inline-flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-fuchsia-500 px-3 text-xs font-semibold text-white shadow-lg shadow-brand-500/30 hover:opacity-90 sm:h-8"
               >
                 <Check className="h-3.5 w-3.5" />
                 Save
               </button>
               <button
                 onClick={cancelEdit}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+                className="tap inline-flex h-10 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 hover:bg-white/10 sm:h-8"
               >
                 <CloseIcon className="h-3.5 w-3.5" />
                 Cancel
@@ -310,7 +310,7 @@ export function ContentCard({
                 }}
                 disabled={publishing !== null}
                 aria-label={`Publish ${title} content`}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
+                className="tap inline-flex h-10 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 hover:bg-white/10 disabled:opacity-50 sm:h-8"
               >
                 {publishing ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -327,7 +327,9 @@ export function ContentCard({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-xl"
+                    // Capped to the viewport so the menu can't run off the edge
+                    // of a narrow phone screen.
+                    className="absolute right-0 z-10 mt-1 w-56 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-xl"
                   >
                     <li className="border-b border-white/10 p-2">
                       <ScheduleControl
@@ -355,7 +357,7 @@ export function ContentCard({
                         <li key={connection.id}>
                           <button
                             onClick={() => handlePublish(connection.platform)}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-white/10"
+                            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-xs text-slate-200 transition hover:bg-white/10 active:bg-white/10"
                           >
                             <span
                               className={`h-2 w-2 shrink-0 rounded-full bg-gradient-to-br ${meta.accent}`}
@@ -380,7 +382,7 @@ export function ContentCard({
             onClick={startEdit}
             aria-label={`Edit ${title} content`}
             title="Edit"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"
+            className="tap inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 sm:h-8 sm:w-8"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -390,7 +392,7 @@ export function ContentCard({
               onClick={handleCopy}
               aria-label={`Copy ${title} content`}
               title="Copy"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"
+              className="tap inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 sm:h-8 sm:w-8"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -437,7 +439,7 @@ export function ContentCard({
                 <button
                   onClick={() => setToast(null)}
                   aria-label="Dismiss"
-                  className="shrink-0 text-emerald-300/70 transition hover:text-emerald-200"
+                  className="tap -my-2 grid h-9 w-9 shrink-0 place-items-center text-emerald-300/70 hover:text-emerald-200"
                 >
                   <CloseIcon className="h-3.5 w-3.5" />
                 </button>
@@ -449,14 +451,14 @@ export function ContentCard({
                   href={toast.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/20 px-2.5 py-1 font-medium text-emerald-200 transition hover:bg-emerald-500/30"
+                  className="tap inline-flex min-h-9 items-center gap-1.5 rounded-md bg-emerald-500/20 px-2.5 font-medium text-emerald-200 hover:bg-emerald-500/30"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open post
                 </a>
                 <button
                   onClick={() => copyLink(toast.url as string)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-white/5 px-2.5 py-1 font-medium text-slate-200 transition hover:bg-white/10"
+                  className="tap inline-flex min-h-9 items-center gap-1.5 rounded-md bg-white/5 px-2.5 font-medium text-slate-200 hover:bg-white/10"
                 >
                   {linkCopied ? (
                     <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -484,13 +486,13 @@ export function ContentCard({
             <div className="mt-2 flex items-center gap-2">
               <button
                 onClick={() => handlePublish(confirm.platform, true)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/25 px-2.5 py-1 font-medium text-amber-100 transition hover:bg-amber-500/35"
+                className="tap inline-flex min-h-9 items-center gap-1.5 rounded-md bg-amber-500/25 px-2.5 font-medium text-amber-100 hover:bg-amber-500/35"
               >
                 Publish anyway
               </button>
               <button
                 onClick={() => setConfirm(null)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-white/5 px-2.5 py-1 font-medium text-slate-200 transition hover:bg-white/10"
+                className="tap inline-flex min-h-9 items-center gap-1.5 rounded-md bg-white/5 px-2.5 font-medium text-slate-200 hover:bg-white/10"
               >
                 Cancel
               </button>
@@ -514,7 +516,7 @@ export function ContentCard({
                   type="button"
                   onClick={() => removeItem(index)}
                   aria-label={`Remove entry ${index + 1}`}
-                  className="mt-1 shrink-0 rounded-lg border border-white/10 bg-white/5 p-2 text-slate-400 transition hover:bg-white/10 hover:text-red-300"
+                  className="tap mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-red-300"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -523,7 +525,7 @@ export function ContentCard({
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-white/15 px-3 py-2 text-xs font-medium text-slate-400 transition hover:border-white/30 hover:text-slate-200"
+              className="tap inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-dashed border-white/15 px-3 text-xs font-medium text-slate-400 hover:border-white/30 hover:text-slate-200"
             >
               <Plus className="h-3.5 w-3.5" />
               Add another
@@ -538,7 +540,7 @@ export function ContentCard({
           />
         )
       ) : items ? (
-        <ol className="scroll-slim max-h-80 space-y-3 overflow-y-auto pr-1">
+        <ol className="scroll-slim scroll-touch max-h-80 space-y-3 overflow-y-auto pr-1">
           {items.map((entry, index) => (
             <li
               key={index}
@@ -549,7 +551,7 @@ export function ContentCard({
           ))}
         </ol>
       ) : (
-        <p className="scroll-slim max-h-80 overflow-y-auto whitespace-pre-wrap pr-1 text-sm leading-relaxed text-slate-200">
+        <p className="scroll-slim scroll-touch max-h-80 overflow-y-auto whitespace-pre-wrap pr-1 text-sm leading-relaxed text-slate-200">
           {text}
         </p>
       )}

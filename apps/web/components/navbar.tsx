@@ -4,17 +4,24 @@ import { motion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LogoMark } from './brand/logo-mark';
 
 export function Navbar() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+  // Inside the app, phones get the dashboard's own title bar and bottom tab bar
+  // instead — two stacked headers would eat a third of the screen.
+  const hiddenOnMobile = pathname.startsWith('/dashboard');
 
   return (
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="sticky top-0 z-50 border-b border-white/5 bg-slate-950/60 backdrop-blur-xl"
+      className={`pt-safe sticky top-0 z-50 border-b border-white/5 bg-slate-950/60 backdrop-blur-xl ${
+        hiddenOnMobile ? 'hidden md:block' : ''
+      }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 font-semibold">

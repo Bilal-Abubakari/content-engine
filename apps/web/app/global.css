@@ -4,6 +4,19 @@
 
 :root {
   color-scheme: dark;
+
+  /* Notch / home-indicator insets, named so utilities can compose them. They
+     only resolve to non-zero once the viewport opts in with `viewport-fit=cover`
+     (set in app/layout.tsx). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Height of the mobile tab bar, excluding its safe-area padding. Content
+     areas reserve this much room so nothing hides behind the bar. */
+  --tab-bar-h: 3.75rem;
+
+  /* Combined height of the mobile app header (title row + notch inset). */
+  --app-header-h: calc(3.25rem + var(--safe-top));
 }
 
 html,
@@ -30,6 +43,23 @@ body {
   background-image:
     radial-gradient(60rem 60rem at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
     radial-gradient(50rem 50rem at 100% 0%, rgba(168, 85, 247, 0.14), transparent 55%);
+  /* App-like touch behaviour: no grey flash on tap, no browser pull-to-refresh
+     or rubber-band chaining, and no silent font inflation in landscape. */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* iOS Safari zooms the whole page whenever a focused control's text is under
+   16px. Our UI is 14px by design, so bump only the controls on small screens —
+   the layout is unchanged but the viewport stops lurching on every tap. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 @layer components {
@@ -50,6 +80,49 @@ body {
   /* Frosted card surface */
   .glass {
     @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl;
+  }
+
+  /* Touch affordance for anything tappable: an immediate depress instead of a
+     hover state the phone can never show, and no long-press callout menu. */
+  .tap {
+    @apply select-none transition-transform duration-100 active:scale-[0.97];
+    -webkit-touch-callout: none;
+  }
+
+  /* A scroll region that keeps its momentum to itself rather than dragging the
+     page (or the whole standalone app) along once it hits an edge. */
+  .scroll-touch {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Translucent app chrome pinned to an edge of the screen. */
+  .app-bar {
+    @apply border-white/5 bg-slate-950/80 backdrop-blur-xl;
+  }
+}
+
+@layer utilities {
+  .pt-safe {
+    padding-top: var(--safe-top);
+  }
+  .pb-safe {
+    padding-bottom: var(--safe-bottom);
+  }
+  /* Clears both the tab bar and the home indicator beneath it. */
+  .pb-tab-bar {
+    padding-bottom: calc(var(--tab-bar-h) + var(--safe-bottom));
+  }
+  .top-app-header {
+    top: var(--app-header-h);
+  }
+  /* Horizontal filter/tab strips scroll, but a visible bar looks unfinished on
+     a phone where the gesture is already discoverable. */
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

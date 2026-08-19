@@ -68,7 +68,7 @@ export function Hint({
             type="button"
             onClick={dismiss}
             aria-label="Dismiss hint"
-            className="-mr-1 rounded-lg p-1 text-brand-200/60 transition hover:bg-white/10 hover:text-brand-100"
+            className="tap -my-2 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brand-200/60 hover:bg-white/10 hover:text-brand-100"
           >
             <X className="h-4 w-4" />
           </button>

@@ -247,13 +247,14 @@ export function ResultsGrid({
         <h2 className="text-lg font-semibold text-slate-200">
           Your repurposed content
         </h2>
-        <div className="flex items-center gap-2">
+        {/* Both actions split the row on phones so neither is a thin target. */}
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <button
             onClick={() => {
               setPreviewPlatform('x');
               setPreviewOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+            className="tap inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-medium text-slate-200 hover:bg-white/10 sm:flex-none"
           >
             <Eye className="h-4 w-4" />
             Preview
@@ -262,7 +263,7 @@ export function ResultsGrid({
             <button
               onClick={handlePublishAll}
               disabled={publishingAll}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="tap inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-4 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
             >
               {publishingAll ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -333,7 +334,7 @@ export function ResultsGrid({
               <span>{bulkResult.text}</span>
               <button
                 onClick={() => setBulkResult(null)}
-                className="shrink-0 text-slate-400 transition hover:text-slate-200"
+                className="tap -my-2 inline-flex min-h-11 shrink-0 items-center px-1 text-slate-400 hover:text-slate-200"
               >
                 Dismiss
               </button>
@@ -348,7 +349,7 @@ export function ResultsGrid({
                       href={link.url as string}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-100 transition hover:bg-white/20"
+                      className="tap inline-flex min-h-9 items-center gap-1.5 rounded-md bg-white/10 px-2.5 text-xs font-medium text-slate-100 hover:bg-white/20"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                       Open on {link.name}

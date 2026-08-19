@@ -1,58 +1,16 @@
 'use client';
 
-import { type InboxStreamEvent } from '@org/shared';
 import { Inbox as InboxIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-
-/** Response shape of GET /api/inbox/unread-count. */
-interface UnreadCount {
-  unread: number;
-}
+import { useUnreadCount } from '@/lib/use-unread-count';
 
 /**
- * Dashboard nav chip for the unified inbox with a live unread badge. Seeds the
- * count from `/api/inbox/unread-count`, then keeps it current by listening to
- * the same SSE stream the inbox uses — so the badge ticks up the moment new
- * activity lands, without polling.
+ * Dashboard nav chip for the unified inbox with a live unread badge, kept
+ * current by the shared SSE subscription so it ticks up the moment new activity
+ * lands, without polling.
  */
 export function InboxNavLink() {
-  const [unread, setUnread] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      try {
-        const res = await fetch('/api/inbox/unread-count', {
-          cache: 'no-store',
-        });
-        if (!res.ok || !active) {
-          return;
-        }
-        const data = (await res.json()) as UnreadCount;
-        if (active) {
-          setUnread(data.unread);
-        }
-      } catch {
-        // Leave the badge hidden if the count can't be fetched.
-      }
-    })();
-
-    const source = new EventSource('/api/inbox/stream');
-    source.onmessage = (message: MessageEvent<string>) => {
-      try {
-        const event = JSON.parse(message.data) as InboxStreamEvent;
-        setUnread(event.unreadTotal);
-      } catch {
-        // Ignore malformed frames.
-      }
-    };
-
-    return () => {
-      active = false;
-      source.close();
-    };
-  }, []);
+  const unread = useUnreadCount();
 
   return (
     <Link

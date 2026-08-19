@@ -130,7 +130,7 @@ export function SettingsForm({
               key={preset.id}
               type="button"
               onClick={() => setTone(preset.id)}
-              className={`rounded-xl border p-3 text-left transition ${
+              className={`tap rounded-xl border p-3 text-left ${
                 tone === preset.id
                   ? 'border-brand-400/60 bg-brand-500/10'
                   : 'border-white/10 bg-white/5 hover:bg-white/10'
@@ -171,7 +171,7 @@ export function SettingsForm({
                 key={format.id}
                 type="button"
                 onClick={() => toggleFormat(format.id)}
-                className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${
+                className={`tap flex items-start gap-3 rounded-xl border p-3 text-left ${
                   selected
                     ? 'border-brand-400/60 bg-brand-500/10'
                     : 'border-white/10 bg-white/5 hover:bg-white/10'
@@ -289,11 +289,13 @@ export function SettingsForm({
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      {/* The primary action spans the card on phones so it sits under the
+          thumb; on desktop it shrinks back to its natural width. */}
+      <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
         <button
           type="submit"
           disabled={saving || noFormats}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="tap inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-6 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           {mode === 'onboarding' ? 'Finish setup' : 'Save changes'}
@@ -303,7 +305,7 @@ export function SettingsForm({
             type="button"
             onClick={handleSkip}
             disabled={saving}
-            className="text-sm font-medium text-slate-400 transition hover:text-slate-200 disabled:opacity-50"
+            className="tap inline-flex min-h-11 items-center justify-center px-2 text-sm font-medium text-slate-400 hover:text-slate-200 disabled:opacity-50"
           >
             Skip for now
           </button>
@@ -328,7 +330,9 @@ function Toggle({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+      role="switch"
+      aria-checked={checked}
+      className="tap flex min-h-14 w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/10"
     >
       <span>
         <span className="block text-sm font-medium text-slate-100">{label}</span>

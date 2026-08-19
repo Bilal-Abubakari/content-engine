@@ -113,17 +113,19 @@ export function Connections() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 pb-24 pt-12">
+    <main className="mx-auto max-w-4xl px-4 pb-12 pt-5 sm:px-6 sm:pb-24 sm:pt-12">
       <Breadcrumbs
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Connections' },
         ]}
       />
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+      {/* The mobile app bar already titles this screen, so the page heading is
+          desktop-only; the subtitle carries the context on both. */}
+      <h1 className="hidden text-3xl font-bold tracking-tight md:block lg:text-4xl">
         Connections
       </h1>
-      <p className="mt-2 text-slate-400">
+      <p className="text-sm text-slate-400 md:mt-2 md:text-base">
         Link your social accounts to publish repurposed content directly from
         the dashboard.
       </p>
@@ -217,7 +219,7 @@ export function Connections() {
                 ) : meta.comingSoon ? (
                   <button
                     disabled
-                    className="inline-flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-500"
+                    className="tap inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-medium text-slate-500"
                   >
                     Coming soon
                   </button>
@@ -225,7 +227,7 @@ export function Connections() {
                   <button
                     onClick={() => disconnect(connection.id, platform)}
                     disabled={busy === platform}
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:opacity-50"
+                    className="tap inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:opacity-50"
                   >
                     {busy === platform && <Loader2 className="h-4 w-4 animate-spin" />}
                     Disconnect
@@ -234,7 +236,7 @@ export function Connections() {
                   <button
                     onClick={() => connect(platform)}
                     disabled={busy === platform}
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:opacity-50"
+                    className="tap inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:opacity-50"
                   >
                     {busy === platform && <Loader2 className="h-4 w-4 animate-spin" />}
                     Connect

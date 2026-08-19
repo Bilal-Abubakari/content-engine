@@ -14,11 +14,13 @@ import {
   type InboxPlatform,
   type InboxStreamEvent,
 } from '@org/shared';
+import { AnimatePresence } from 'framer-motion';
 import {
   Archive,
   AtSign,
   Check,
   CheckCheck,
+  ChevronLeft,
   Clock,
   Inbox as InboxIcon,
   Loader2,
@@ -28,12 +30,14 @@ import {
   Music2,
   PenSquare,
   Send,
+  SlidersHorizontal,
   Sparkles,
   Star,
   type LucideIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Sheet } from '@/components/mobile/sheet';
 import { Breadcrumbs } from '../breadcrumbs';
 import {
   FacebookIcon,
@@ -191,8 +195,12 @@ export function Inbox() {
   const [drafting, setDrafting] = useState(false);
   const [sending, setSending] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
+  // On phones the filter rail lives in a bottom sheet instead of a side column.
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const threadEndRef = useRef<HTMLDivElement | null>(null);
+  // Whether the open thread pushed a history entry we still owe a `back()`.
+  const pushedRef = useRef(false);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -325,6 +333,43 @@ export function Inbox() {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [active?.items?.length]);
 
+  /**
+   * On phones an open thread is a full-screen push, so it has to answer to the
+   * system back gesture like any other screen would. Desktop keeps the thread
+   * beside the list, where every click would otherwise pile up a history entry.
+   */
+  useEffect(() => {
+    if (!activeId || !window.matchMedia('(max-width: 1023px)').matches) {
+      return undefined;
+    }
+    window.history.pushState({ inboxThread: activeId }, '');
+    pushedRef.current = true;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onPop = () => {
+      pushedRef.current = false;
+      setActiveId(null);
+      setActive(null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeId]);
+
+  /** Leaves the thread, unwinding the history entry the push added. */
+  const closeThread = useCallback(() => {
+    if (pushedRef.current) {
+      // `popstate` clears the state, keeping both exits on one code path.
+      window.history.back();
+      return;
+    }
+    setActiveId(null);
+    setActive(null);
+  }, []);
+
   async function changeStatus(status: InboxItemStatus) {
     if (!active) {
       return;
@@ -348,8 +393,7 @@ export function Inbox() {
     mergeConversation(convo);
     // Snoozing/archiving drops the thread from the active view — close it.
     if (!belongsInView(convo)) {
-      setActiveId(null);
-      setActive(null);
+      closeThread();
     }
   }
 
@@ -422,11 +466,34 @@ export function Inbox() {
     ? INBOX_PLATFORM_CATALOGUE[active.platform].inbox.canReply
     : false;
 
+  // Drives the count on the mobile "Filters" button so a narrowed-down list is
+  // never mistaken for an empty inbox.
+  const activeFilterCount =
+    (channel ? 1 : 0) +
+    (platform ? 1 : 0) +
+    (statusTab === 'active' ? 0 : 1) +
+    (unreadOnly ? 1 : 0);
+
+  const filters = (
+    <InboxFilters
+      channel={channel}
+      onChannel={setChannel}
+      statusTab={statusTab}
+      onStatusTab={setStatusTab}
+      platform={platform}
+      onPlatform={setPlatform}
+      unreadOnly={unreadOnly}
+      onUnreadOnly={setUnreadOnly}
+    />
+  );
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:pt-8 lg:px-8">
       <Breadcrumbs items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Inbox' }]} />
 
-      <div className="mt-4 flex items-center justify-between gap-4">
+      {/* The app shell's title bar already names this screen on phones, so the
+          full page heading is desktop-only. */}
+      <div className="hidden items-center justify-between gap-4 md:flex">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight sm:text-3xl">
             <InboxIcon className="h-7 w-7 text-brand-300" />
@@ -450,95 +517,47 @@ export function Inbox() {
         </button>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[220px_320px_1fr]">
-        {/* Filter rail */}
-        <aside className="glass h-fit p-4">
-          <p className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Channel
-          </p>
-          <div className="mt-2 space-y-1">
-            <FilterButton
-              active={channel === null}
-              onClick={() => setChannel(null)}
-              icon={InboxIcon}
-              label="All channels"
-            />
-            {INBOX_CHANNELS.map((c) => (
-              <FilterButton
-                key={c}
-                active={channel === c}
-                onClick={() => setChannel(c)}
-                icon={CHANNEL_META[c].icon}
-                label={CHANNEL_META[c].label}
-              />
-            ))}
-          </div>
+      {/* Mobile toolbar: a filter trigger plus a swipeable channel strip, the
+          two controls worth surfacing without opening the full rail. */}
+      <div className="hide-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 md:hidden">
+        <button
+          onClick={() => setFiltersOpen(true)}
+          className={`tap inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
+            activeFilterCount > 0
+              ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
+              : 'border-white/10 bg-white/5 text-slate-300'
+          }`}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-bold text-white">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        <span className="h-5 w-px shrink-0 bg-white/10" />
+        <ChannelChip
+          active={channel === null}
+          onClick={() => setChannel(null)}
+          label="All"
+        />
+        {INBOX_CHANNELS.map((c) => (
+          <ChannelChip
+            key={c}
+            active={channel === c}
+            onClick={() => setChannel(c)}
+            label={CHANNEL_META[c].label}
+          />
+        ))}
+      </div>
 
-          <p className="mt-5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Status
-          </p>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {STATUS_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setStatusTab(tab.key)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  statusTab === tab.key
-                    ? 'bg-brand-500/20 text-brand-100'
-                    : 'text-slate-400 hover:bg-white/5'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Platform
-          </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <button
-              onClick={() => setPlatform(null)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                platform === null
-                  ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
-                  : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
-              }`}
-            >
-              All
-            </button>
-            {INBOX_PLATFORMS.map((p) => {
-              const Glyph = PLATFORM_ICON[p];
-              return (
-                <button
-                  key={p}
-                  onClick={() => setPlatform(platform === p ? null : p)}
-                  title={INBOX_PLATFORM_CATALOGUE[p].name}
-                  className={`grid h-8 w-8 place-items-center rounded-full border transition ${
-                    platform === p
-                      ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
-                      : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  <Glyph className="h-4 w-4" />
-                </button>
-              );
-            })}
-          </div>
-
-          <label className="mt-5 flex cursor-pointer items-center gap-2 px-1 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={unreadOnly}
-              onChange={(e) => setUnreadOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-white/5 accent-brand-500"
-            />
-            Unread only
-          </label>
-        </aside>
+      <div className="mt-3 grid gap-4 lg:mt-6 lg:grid-cols-[220px_320px_1fr]">
+        {/* Filter rail — a bottom sheet on phones, a side column from lg up. */}
+        <aside className="glass hidden h-fit p-4 lg:block">{filters}</aside>
 
         {/* Conversation list */}
-        <section className="glass max-h-[70vh] overflow-y-auto p-2">
+        <section className="glass scroll-touch max-h-[calc(100dvh-16rem)] overflow-y-auto p-2 lg:max-h-[70vh]">
           {loading ? (
             <div className="grid h-40 place-items-center text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -556,10 +575,10 @@ export function Inbox() {
                   <li key={convo.id}>
                     <button
                       onClick={() => void openConversation(convo.id)}
-                      className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${
+                      className={`tap flex w-full items-start gap-3 rounded-xl p-3 text-left ${
                         isActive
                           ? 'bg-brand-500/15'
-                          : 'hover:bg-white/5'
+                          : 'active:bg-white/5 lg:hover:bg-white/5'
                       }`}
                     >
                       <Avatar
@@ -608,8 +627,14 @@ export function Inbox() {
           )}
         </section>
 
-        {/* Thread + composer */}
-        <section className="glass flex max-h-[70vh] flex-col overflow-hidden">
+        {/* Thread + composer. On phones an open thread is a full-screen push
+            over the tab bar — the way a native messaging app behaves — while
+            from lg up it stays docked beside the list. */}
+        <section
+          className={`glass flex-col overflow-hidden max-lg:fixed max-lg:inset-0 max-lg:z-50 max-lg:rounded-none max-lg:border-0 max-lg:bg-slate-950 lg:max-h-[70vh] ${
+            activeId ? 'flex' : 'hidden lg:flex'
+          }`}
+        >
           {!activeId ? (
             <div className="grid flex-1 place-items-center px-6 text-center text-sm text-slate-500">
               <div>
@@ -623,27 +648,32 @@ export function Inbox() {
             </div>
           ) : (
             <>
-              <header className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    name={active.participant.name}
-                    avatarUrl={active.participant.avatarUrl}
-                  />
-                  <div>
-                    <p className="flex items-center gap-2 font-semibold text-white">
-                      {active.participant.name}
-                      <ConversationBadges
-                        platform={active.platform}
-                        channel={active.channel}
-                      />
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {INBOX_PLATFORM_CATALOGUE[active.platform].name}
-                      {active.accountName ? ` · ${active.accountName}` : ''}
-                    </p>
-                  </div>
+              <header className="pt-safe flex shrink-0 items-center gap-2 border-b border-white/10 p-3 lg:p-4">
+                <button
+                  onClick={closeThread}
+                  aria-label="Back to conversations"
+                  className="tap -ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-slate-300 lg:hidden"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <Avatar
+                  name={active.participant.name}
+                  avatarUrl={active.participant.avatarUrl}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2 truncate font-semibold text-white">
+                    <span className="truncate">{active.participant.name}</span>
+                    <ConversationBadges
+                      platform={active.platform}
+                      channel={active.channel}
+                    />
+                  </p>
+                  <p className="truncate text-xs text-slate-500">
+                    {INBOX_PLATFORM_CATALOGUE[active.platform].name}
+                    {active.accountName ? ` · ${active.accountName}` : ''}
+                  </p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center">
                   <IconAction
                     icon={CheckCheck}
                     label="Mark replied"
@@ -662,7 +692,7 @@ export function Inbox() {
                 </div>
               </header>
 
-              <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              <div className="scroll-touch flex-1 space-y-3 overflow-y-auto p-4">
                 {(active.items ?? []).map((item) => {
                   const outbound = item.direction === 'outbound';
                   return (
@@ -671,7 +701,7 @@ export function Inbox() {
                       className={`flex ${outbound ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+                        className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[80%] ${
                           outbound
                             ? 'bg-brand-500/25 text-brand-50'
                             : 'bg-white/5 text-slate-100'
@@ -693,13 +723,15 @@ export function Inbox() {
                 <div ref={threadEndRef} />
               </div>
 
-              <footer className="border-t border-white/10 p-3">
+              {/* Padding resolves to the home-indicator inset when there is
+                  one, so the send button never sits under the gesture bar. */}
+              <footer className="shrink-0 border-t border-white/10 px-3 pt-3 pb-[max(0.75rem,var(--safe-bottom))]">
                 {canReply ? (
                   <>
                     <textarea
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
-                      rows={3}
+                      rows={2}
                       placeholder="Write a reply, or draft one with AI…"
                       className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-brand-400/50"
                     />
@@ -707,7 +739,7 @@ export function Inbox() {
                       <button
                         onClick={() => void requestDraft()}
                         disabled={drafting || sending}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:opacity-50"
+                        className="tap inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-slate-200 hover:bg-white/10 disabled:opacity-50"
                       >
                         {drafting ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -719,7 +751,7 @@ export function Inbox() {
                       <button
                         onClick={() => void sendReply()}
                         disabled={sending || drafting || !draft.trim()}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 disabled:opacity-50"
+                        className="tap inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-white px-5 text-sm font-semibold text-slate-900 hover:bg-slate-200 disabled:opacity-50"
                       >
                         {sending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -743,8 +775,181 @@ export function Inbox() {
         </section>
       </div>
 
-      {composeOpen && <InboxCompose onClose={() => setComposeOpen(false)} />}
+      {/* Composing is the one creative action on this screen, so on phones it
+          gets a floating button parked above the tab bar within thumb reach —
+          hidden while a thread is open so it can't cover the composer. */}
+      {!activeId && (
+        <button
+          onClick={() => setComposeOpen(true)}
+          aria-label="New post"
+          className="tap fixed right-4 bottom-[calc(var(--tab-bar-h)+var(--safe-bottom)+1rem)] z-30 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white shadow-lg shadow-brand-500/40 md:hidden"
+        >
+          <PenSquare className="h-5 w-5" />
+        </button>
+      )}
+
+      <AnimatePresence>
+        {filtersOpen && (
+          <Sheet onClose={() => setFiltersOpen(false)} labelledBy="inbox-filters-title">
+            <div className="flex items-center justify-between px-5 pb-3">
+              <h2 id="inbox-filters-title" className="text-base font-semibold">
+                Filters
+              </h2>
+              <button
+                onClick={() => setFiltersOpen(false)}
+                className="tap text-sm font-semibold text-brand-300"
+              >
+                Done
+              </button>
+            </div>
+            <div className="scroll-touch overflow-y-auto px-5 pb-6">
+              {filters}
+            </div>
+          </Sheet>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {composeOpen && <InboxCompose onClose={() => setComposeOpen(false)} />}
+      </AnimatePresence>
     </div>
+  );
+}
+
+/**
+ * The channel / status / platform filter set. Rendered as a side rail on wide
+ * screens and inside a bottom sheet on phones, from one definition so the two
+ * can never drift apart.
+ */
+function InboxFilters({
+  channel,
+  onChannel,
+  statusTab,
+  onStatusTab,
+  platform,
+  onPlatform,
+  unreadOnly,
+  onUnreadOnly,
+}: {
+  channel: InboxChannel | null;
+  onChannel: (value: InboxChannel | null) => void;
+  statusTab: StatusTab;
+  onStatusTab: (value: StatusTab) => void;
+  platform: InboxPlatform | null;
+  onPlatform: (value: InboxPlatform | null) => void;
+  unreadOnly: boolean;
+  onUnreadOnly: (value: boolean) => void;
+}) {
+  return (
+    <>
+      <p className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Channel
+      </p>
+      <div className="mt-2 space-y-1">
+        <FilterButton
+          active={channel === null}
+          onClick={() => onChannel(null)}
+          icon={InboxIcon}
+          label="All channels"
+        />
+        {INBOX_CHANNELS.map((c) => (
+          <FilterButton
+            key={c}
+            active={channel === c}
+            onClick={() => onChannel(c)}
+            icon={CHANNEL_META[c].icon}
+            label={CHANNEL_META[c].label}
+          />
+        ))}
+      </div>
+
+      <p className="mt-5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Status
+      </p>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => onStatusTab(tab.key)}
+            className={`tap min-h-9 rounded-full px-3 text-xs font-semibold ${
+              statusTab === tab.key
+                ? 'bg-brand-500/20 text-brand-100'
+                : 'text-slate-400 hover:bg-white/5'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Platform
+      </p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <button
+          onClick={() => onPlatform(null)}
+          className={`tap min-h-9 rounded-full border px-3 text-xs font-semibold ${
+            platform === null
+              ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
+              : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+          }`}
+        >
+          All
+        </button>
+        {INBOX_PLATFORMS.map((p) => {
+          const Glyph = PLATFORM_ICON[p];
+          return (
+            <button
+              key={p}
+              onClick={() => onPlatform(platform === p ? null : p)}
+              title={INBOX_PLATFORM_CATALOGUE[p].name}
+              aria-label={INBOX_PLATFORM_CATALOGUE[p].name}
+              className={`tap grid h-9 w-9 place-items-center rounded-full border ${
+                platform === p
+                  ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
+                  : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              <Glyph className="h-4 w-4" />
+            </button>
+          );
+        })}
+      </div>
+
+      <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-2 px-1 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={unreadOnly}
+          onChange={(e) => onUnreadOnly(e.target.checked)}
+          className="h-5 w-5 rounded border-white/20 bg-white/5 accent-brand-500"
+        />
+        Unread only
+      </label>
+    </>
+  );
+}
+
+/** A pill in the phone-only horizontal channel strip. */
+function ChannelChip({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`tap h-9 shrink-0 rounded-full border px-3 text-xs font-semibold ${
+        active
+          ? 'border-brand-400/50 bg-brand-500/20 text-brand-100'
+          : 'border-white/10 bg-white/5 text-slate-300'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -763,7 +968,7 @@ function FilterButton({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+      className={`tap flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm ${
         active
           ? 'bg-brand-500/15 font-semibold text-brand-100'
           : 'text-slate-300 hover:bg-white/5'
@@ -790,9 +995,9 @@ function IconAction({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+      className="tap grid h-10 w-10 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white"
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-[18px] w-[18px]" />
     </button>
   );
 }

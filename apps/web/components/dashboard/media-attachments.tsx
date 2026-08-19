@@ -91,12 +91,12 @@ export function MediaAttachments({
             · required for Instagram &amp; TikTok
           </span>
         </span>
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400">
+        <label className="flex min-h-11 cursor-pointer select-none items-center gap-1.5 text-[11px] text-slate-400 sm:min-h-0">
           <input
             type="checkbox"
             checked={applyToAll}
             onChange={(e) => setApplyToAll(e.target.checked)}
-            className="h-3 w-3 rounded border-white/20 bg-slate-900"
+            className="h-4 w-4 rounded border-white/20 bg-slate-900 sm:h-3 sm:w-3"
           />
           Apply uploads to all cards
         </label>
@@ -107,16 +107,18 @@ export function MediaAttachments({
           {media.map((item) => (
             <div
               key={item.id}
-              className="group relative h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-slate-900"
+              className="group relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-slate-900 sm:h-16 sm:w-16"
             >
               <Thumb item={item} />
-              <div className="absolute inset-0 flex items-start justify-between p-1 opacity-0 transition group-hover:opacity-100">
+              {/* Touch devices have no hover, so the actions stay visible on
+                  phones and only reveal on hover from `sm` up. */}
+              <div className="absolute inset-0 flex items-start justify-between p-1 transition sm:opacity-0 sm:group-hover:opacity-100">
                 <button
                   type="button"
                   onClick={() => onAttachToAll(item.id)}
                   title="Use on all cards"
                   aria-label="Use on all cards"
-                  className="grid h-5 w-5 place-items-center rounded bg-slate-900/80 text-slate-200 transition hover:bg-slate-800"
+                  className="tap grid h-7 w-7 place-items-center rounded bg-slate-900/80 text-slate-200 hover:bg-slate-800 sm:h-5 sm:w-5"
                 >
                   <CopyPlus className="h-3 w-3" />
                 </button>
@@ -125,7 +127,7 @@ export function MediaAttachments({
                   onClick={() => onDetach(item.id)}
                   title="Remove"
                   aria-label="Remove media"
-                  className="grid h-5 w-5 place-items-center rounded bg-slate-900/80 text-slate-200 transition hover:bg-red-500/80"
+                  className="tap grid h-7 w-7 place-items-center rounded bg-slate-900/80 text-slate-200 hover:bg-red-500/80 sm:h-5 sm:w-5"
                 >
                   <CloseIcon className="h-3 w-3" />
                 </button>
@@ -140,7 +142,7 @@ export function MediaAttachments({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
+          className="tap inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 hover:bg-white/10 disabled:opacity-50 sm:min-h-8 sm:px-2.5"
         >
           {uploading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -155,7 +157,7 @@ export function MediaAttachments({
             <button
               type="button"
               onClick={() => setReuseOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+              className="tap inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 hover:bg-white/10 sm:min-h-8 sm:px-2.5"
             >
               <Layers className="h-3.5 w-3.5" />
               Reuse
@@ -181,7 +183,7 @@ export function MediaAttachments({
                           onAttach(item.id);
                           setReuseOpen(false);
                         }}
-                        className="relative h-12 w-12 overflow-hidden rounded-md border border-white/10 transition hover:border-brand-400/60"
+                        className="tap relative h-12 w-12 overflow-hidden rounded-md border border-white/10 hover:border-brand-400/60"
                       >
                         <Thumb item={item} />
                       </button>

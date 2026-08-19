@@ -27,6 +27,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#6366f1',
+  width: 'device-width',
+  initialScale: 1,
+  // Let the app paint edge-to-edge under the notch and home indicator; the
+  // `*-safe` utilities in global.css pad the chrome back out of their way.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

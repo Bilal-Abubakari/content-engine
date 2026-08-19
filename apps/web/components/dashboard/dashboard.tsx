@@ -120,31 +120,35 @@ export function Dashboard({
 
   return (
     <TourProvider autoStart>
-      <main className="mx-auto max-w-7xl px-6 pb-24 pt-12">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-5 sm:px-6 sm:pb-24 sm:pt-12">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
             Welcome back, {userName.split(' ')[0]} 👋
           </h1>
-          <p className="mt-2 text-slate-400">
+          <p className="mt-1.5 text-sm text-slate-400 sm:mt-2 sm:text-base">
             Paste a URL or drop in raw text, and get a week of content in
             seconds.
           </p>
+          {/* On phones the bottom tab bar already owns Inbox, History,
+              Scheduled and Settings, so only Connections — the one screen
+              without a tab — stays in this row. */}
           <div
             data-tour="nav"
             className="mt-4 flex flex-wrap items-center gap-2"
           >
             <Link
               href="/dashboard/connections"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+              className="tap inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-medium text-slate-200 hover:bg-white/10"
             >
               <Link2 className="h-4 w-4" />
               Manage connections
             </Link>
-            <InboxNavLink />
+            <span className="hidden md:contents">
+              <InboxNavLink />
             <Link
               href="/dashboard/history"
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
@@ -166,6 +170,7 @@ export function Dashboard({
               <Settings className="h-4 w-4" />
               Settings
             </Link>
+            </span>
           </div>
         </motion.div>
 
@@ -210,7 +215,7 @@ export function Dashboard({
                       type="button"
                       onClick={() => toggleFormat(format.id)}
                       aria-pressed={selected}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                      className={`tap min-h-9 rounded-full border px-3 text-xs font-medium ${
                         selected
                           ? 'border-brand-400/60 bg-brand-500/15 text-brand-100'
                           : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
@@ -255,11 +260,13 @@ export function Dashboard({
               <Sparkles className="h-3.5 w-3.5" />
               Works with articles, transcripts, or rough notes.
             </span>
+            {/* The one action on this screen, so on phones it spans the card
+                and sits at a comfortable thumb height. */}
             <button
               type="submit"
               data-tour="repurpose"
               disabled={!canSubmit}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="tap inline-flex w-full min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-6 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {status === 'loading' ? (
                 <>

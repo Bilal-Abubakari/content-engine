@@ -25,7 +25,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
-import { useEffect } from 'react';
+import { Sheet } from '@/components/mobile/sheet';
 import {
   FacebookIcon,
   InstagramIcon,
@@ -82,109 +82,82 @@ export function PreviewModal({
   const persona = toPersona(userName);
   const activeMedia = media[active] ?? [];
 
-  // Close on Escape and lock body scroll while the modal is open.
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    }
-    document.addEventListener('keydown', onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+    <Sheet
+      onClose={onClose}
+      labelledBy="preview-title"
+      className="sm:max-w-lg"
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ duration: 0.2 }}
-        onClick={(event) => event.stopPropagation()}
-        className="glass flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden p-0"
-      >
-        <header className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-100">
-              Post preview
-            </h2>
-            <p className="text-xs text-slate-500">
-              How your content will look before you publish.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close preview"
-            className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"
-          >
-            <CloseIcon className="h-4 w-4" />
-          </button>
-        </header>
-
-        <div className="flex gap-1 overflow-x-auto border-b border-white/10 px-3 py-2">
-          {SOCIAL_PLATFORMS.map((platform) => {
-            const Icon = PLATFORM_ICON[platform];
-            const selected = platform === active;
-            return (
-              <button
-                key={platform}
-                onClick={() => onSelect(platform)}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  selected
-                    ? 'bg-white/10 text-white'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {PLATFORM_CATALOGUE[platform].name}
-                {PLATFORM_CATALOGUE[platform].comingSoon && (
-                  <span className="rounded-full bg-amber-500/20 px-1.5 text-[9px] font-semibold uppercase text-amber-300">
-                    Soon
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 pb-3 sm:py-4">
+        <div>
+          <h2 id="preview-title" className="text-sm font-semibold text-slate-100">
+            Post preview
+          </h2>
+          <p className="text-xs text-slate-500">
+            How your content will look before you publish.
+          </p>
         </div>
+        <button
+          onClick={onClose}
+          aria-label="Close preview"
+          className="tap -mr-1 grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+        >
+          <CloseIcon className="h-4 w-4" />
+        </button>
+      </header>
 
-        <div className="scroll-slim overflow-y-auto bg-slate-950/40 p-5">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
+      <div className="hide-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 px-3 py-2">
+        {SOCIAL_PLATFORMS.map((platform) => {
+          const Icon = PLATFORM_ICON[platform];
+          const selected = platform === active;
+          return (
+            <button
+              key={platform}
+              onClick={() => onSelect(platform)}
+              className={`tap inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-medium ${
+                selected
+                  ? 'bg-white/10 text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              }`}
             >
-              {PLATFORM_CATALOGUE[active].comingSoon && (
-                <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-                  Direct publishing to {PLATFORM_CATALOGUE[active].name} is coming
-                  soon — it needs image/video generation. This is a caption
-                  preview.
-                </p>
+              <Icon className="h-3.5 w-3.5" />
+              {PLATFORM_CATALOGUE[platform].name}
+              {PLATFORM_CATALOGUE[platform].comingSoon && (
+                <span className="rounded-full bg-amber-500/20 px-1.5 text-[9px] font-semibold uppercase text-amber-300">
+                  Soon
+                </span>
               )}
-              <PlatformPreview
-                platform={active}
-                content={content}
-                persona={persona}
-                media={activeMedia}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </motion.div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="scroll-slim scroll-touch overflow-y-auto bg-slate-950/40 p-4 sm:p-5">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+          >
+            {PLATFORM_CATALOGUE[active].comingSoon && (
+              <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                Direct publishing to {PLATFORM_CATALOGUE[active].name} is coming
+                soon — it needs image/video generation. This is a caption
+                preview.
+              </p>
+            )}
+            <PlatformPreview
+              platform={active}
+              content={content}
+              persona={persona}
+              media={activeMedia}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </Sheet>
   );
 }
 
@@ -496,7 +469,7 @@ function TikTokPreview({
   const video = media.find((item) => item.kind === 'video');
   const image = media.find((item) => item.kind === 'image');
   return (
-    <div className="mx-auto flex max-w-[260px] flex-col overflow-hidden rounded-2xl bg-black text-white shadow-2xl">
+    <div className="mx-auto flex w-full max-w-[260px] flex-col overflow-hidden rounded-2xl bg-black text-white shadow-2xl">
       <div className="relative aspect-[9/16] bg-gradient-to-b from-slate-800 to-black">
         {video ? (
           <video

@@ -84,7 +84,7 @@ export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
             setLoading(true);
             void load();
           }}
-          className="inline-flex flex-none items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+          className="tap inline-flex min-h-11 flex-none items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 text-sm font-semibold text-slate-100 hover:bg-white/10"
         >
           Retry
         </button>
@@ -148,7 +148,7 @@ export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
         {isFree ? (
           <Link
             href="/#pricing"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 transition hover:opacity-90"
+            className="tap inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 px-5 text-sm font-semibold text-white shadow-lg shadow-brand-500/30 hover:opacity-90 sm:w-auto"
           >
             <Zap className="h-4 w-4" />
             Upgrade
@@ -157,7 +157,7 @@ export function PlanPanel({ refreshSignal = 0 }: { refreshSignal?: number }) {
           <button
             onClick={openPortal}
             disabled={portalPending}
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-slate-100 transition enabled:hover:bg-white/10 disabled:opacity-60"
+            className="tap inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 text-sm font-semibold text-slate-100 enabled:hover:bg-white/10 disabled:opacity-60 sm:w-auto"
           >
             {portalPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

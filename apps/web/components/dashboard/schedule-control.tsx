@@ -32,7 +32,7 @@ export function ScheduleControl({
           type="button"
           onClick={() => onModeChange('now')}
           aria-pressed={mode === 'now'}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+          className={`tap inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium sm:min-h-8 ${
             mode === 'now'
               ? 'bg-white/10 text-slate-100'
               : 'text-slate-400 hover:text-slate-200'
@@ -45,7 +45,7 @@ export function ScheduleControl({
           type="button"
           onClick={() => onModeChange('later')}
           aria-pressed={mode === 'later'}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+          className={`tap inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium sm:min-h-8 ${
             mode === 'later'
               ? 'bg-white/10 text-slate-100'
               : 'text-slate-400 hover:text-slate-200'
@@ -62,7 +62,7 @@ export function ScheduleControl({
           value={value}
           min={min}
           onChange={(e) => onValueChange(e.target.value)}
-          className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-900/60 px-2.5 py-1.5 text-xs text-slate-100 outline-none transition [color-scheme:dark] focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/30"
+          className="mt-1.5 min-h-10 w-full rounded-lg border border-white/10 bg-slate-900/60 px-2.5 text-xs text-slate-100 outline-none transition [color-scheme:dark] focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/30 sm:min-h-0 sm:py-1.5"
         />
       )}
 

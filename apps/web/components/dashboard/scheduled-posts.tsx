@@ -53,17 +53,18 @@ export function ScheduledPosts() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 pb-24 pt-12">
+    <main className="mx-auto max-w-4xl px-4 pb-12 pt-5 sm:px-6 sm:pb-24 sm:pt-12">
       <Breadcrumbs
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Scheduled' },
         ]}
       />
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+      {/* The mobile app bar already titles this screen. */}
+      <h1 className="hidden text-3xl font-bold tracking-tight md:block lg:text-4xl">
         Scheduled posts
       </h1>
-      <p className="mt-2 text-slate-400">
+      <p className="text-sm text-slate-400 md:mt-2 md:text-base">
         Posts queued to publish automatically at the time you picked. Cancel any
         of them before they go out.
       </p>
@@ -86,7 +87,7 @@ export function ScheduledPosts() {
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <div className="glass mt-8 flex flex-col items-center gap-3 p-12 text-center">
+        <div className="glass mt-8 flex flex-col items-center gap-3 p-8 text-center sm:p-12">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-white/5 text-slate-400">
             <CalendarClock className="h-6 w-6" />
           </span>
@@ -103,7 +104,7 @@ export function ScheduledPosts() {
             return (
               <li
                 key={post.id}
-                className="glass flex items-start justify-between gap-4 p-5"
+                className="glass flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:p-5"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -127,7 +128,7 @@ export function ScheduledPosts() {
                 <button
                   onClick={() => cancel(post.id)}
                   disabled={cancelling === post.id}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-red-500/15 hover:text-red-200 disabled:opacity-50"
+                  className="tap inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-slate-300 hover:bg-red-500/15 hover:text-red-200 disabled:opacity-50 sm:min-h-9"
                 >
                   {cancelling === post.id ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
