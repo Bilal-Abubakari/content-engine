@@ -16,12 +16,9 @@
   --safe-top: 0px;
   --safe-bottom: 0px;
 
-  /* Height of the mobile tab bar, excluding its safe-area padding. Content
-     areas reserve this much room so nothing hides behind the bar. */
+  /* Height of the mobile tab bar, excluding its safe-area padding. Floating
+     buttons offset themselves by this much to sit clear of the bar. */
   --tab-bar-h: 3.75rem;
-
-  /* Combined height of the mobile app header (title row + notch inset). */
-  --app-header-h: calc(3.25rem + var(--safe-top));
 }
 
 /* Installed (or fullscreen) — we own the whole screen, so now the insets are a
@@ -116,6 +113,20 @@ body {
     @apply border-white/5 bg-slate-950/80 backdrop-blur-xl;
   }
 
+  /* The phone app frame: exactly one viewport tall, with the page scrolling
+     inside it rather than the document scrolling.
+
+     This is what keeps the tab bar and the floating buttons on the bottom edge.
+     iOS resolves `position: fixed; bottom: 0` against the *document* in a
+     standalone (installed) app, so on a screen whose content was too short to
+     scroll they rode up to wherever the content happened to end. A frame that
+     is always exactly one viewport tall means the document can never be shorter
+     than the screen, so the case simply doesn't arise. */
+  .app-frame {
+    height: 100vh; /* Fallback for iOS before 15.4, which has no dvh unit. */
+    height: 100dvh;
+  }
+
   /* The installed app's launch screen. Gated here rather than in JavaScript so
      it is painted (or not) on the very first frame — see SplashScreen. */
   .splash {
@@ -134,13 +145,6 @@ body {
   }
   .pb-safe {
     padding-bottom: var(--safe-bottom);
-  }
-  /* Clears both the tab bar and the home indicator beneath it. */
-  .pb-tab-bar {
-    padding-bottom: calc(var(--tab-bar-h) + var(--safe-bottom));
-  }
-  .top-app-header {
-    top: var(--app-header-h);
   }
   /* Horizontal filter/tab strips scroll, but a visible bar looks unfinished on
      a phone where the gesture is already discoverable. */

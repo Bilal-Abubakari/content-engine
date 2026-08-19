@@ -35,10 +35,14 @@ const TABS: Tab[] = [
 ];
 
 /**
- * The primary navigation on phones: a fixed bottom tab bar, the pattern every
- * native app uses. It replaces the desktop link row (which sits above the fold
- * and is unreachable one-handed) and is hidden from `md` up, where the header
- * and in-page navigation take over.
+ * The primary navigation on phones: a bottom tab bar, the pattern every native
+ * app uses. It replaces the desktop link row (which sits above the fold and is
+ * unreachable one-handed) and is hidden from `md` up, where the header and
+ * in-page navigation take over.
+ *
+ * It sits on the bottom edge as the last row of the {@link AppShell} frame
+ * rather than by `position: fixed`, which an installed iOS app resolves against
+ * the document and therefore drags up the screen on short pages.
  */
 export function TabBar() {
   const pathname = usePathname();
@@ -53,7 +57,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="app-bar pb-safe fixed inset-x-0 bottom-0 z-40 border-t md:hidden"
+      className="app-bar pb-safe z-40 shrink-0 border-t md:hidden"
     >
       <ul className="flex items-stretch">
         {TABS.map(({ href, label, icon: Icon, badge }) => {

@@ -22,19 +22,25 @@ const SCREENS: Record<string, { title: string; parent?: string }> = {
 };
 
 /**
- * The phone chrome for every dashboard screen: a sticky title bar at the top
- * and the tab bar at the bottom, with the page scrolling between them. Both are
- * hidden from `md` up, where the marketing navbar and in-page navigation are
- * the better fit for a pointer and a wide viewport.
+ * The phone chrome for every dashboard screen: a title bar at the top and the
+ * tab bar at the bottom, with the page scrolling between them. Both are hidden
+ * from `md` up, where the marketing navbar and in-page navigation are the
+ * better fit for a pointer and a wide viewport.
+ *
+ * On phones the three parts form a fixed-height frame (see `.app-frame`) and
+ * only the middle scrolls, exactly like a native tab navigator. That is also
+ * what keeps the chrome on the screen edges: pinning it with `position: fixed`
+ * is unreliable in an installed iOS app, where a page too short to scroll left
+ * the bar floating in the middle of the screen. From `md` up the frame
+ * dissolves and the document scrolls normally again.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const screen = SCREENS[pathname];
 
   return (
-    <>
-      <header className="app-bar pt-safe sticky top-0 z-30 border-b md:hidden">
-        {/* Height must stay in step with --app-header-h in global.css. */}
+    <div className="app-frame flex flex-col overflow-hidden md:block md:h-auto md:overflow-visible">
+      <header className="app-bar pt-safe z-30 shrink-0 border-b md:hidden">
         <div className="flex h-[3.25rem] items-center gap-2 px-2">
           {screen?.parent ? (
             <Link
@@ -55,11 +61,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {/* Reserve room for the tab bar so the last row of content is never
-          trapped underneath it. */}
-      <div className="pb-tab-bar md:pb-0">{children}</div>
+      {/* The only scrolling region on a phone; on desktop it goes back to being
+          a plain block so the document scrolls as usual. */}
+      <div className="scroll-touch min-h-0 flex-1 overflow-y-auto md:overflow-visible">
+        {children}
+      </div>
 
       <TabBar />
-    </>
+    </div>
   );
 }
