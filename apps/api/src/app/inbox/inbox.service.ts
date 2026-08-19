@@ -17,10 +17,10 @@ import {
 import {
   ACTIVE_INBOX_STATUSES,
   INBOX_PLATFORM_CATALOGUE,
+  inboxChannelsFor,
   isInboxPlatform,
   type ContentTone,
   type ConversationView,
-  type InboxChannel,
   type InboxItemStatus,
   type InboxItemView,
   type InboxPage,
@@ -342,7 +342,7 @@ export class InboxService {
     }
 
     let changed = 0;
-    for (const channel of this.channelsFor(platform)) {
+    for (const channel of inboxChannelsFor(platform)) {
       const cursorRow = await this.prisma.syncCursor.findUnique({
         where: {
           connectionId_channel: { connectionId: connection.id, channel },
@@ -419,6 +419,9 @@ export class InboxService {
       const inboundCount = normalized.items.filter(
         (item) => item.direction === 'inbound',
       ).length;
+      // A thread whose latest item is our own message has already been answered
+      // — importing it as unread would put it back in the to-do pile.
+      const answered = newest.direction === 'outbound';
       const created = await this.prisma.conversation.create({
         data: {
           userId: connection.userId,
@@ -431,8 +434,8 @@ export class InboxService {
           participantName: normalized.participant.name,
           participantAvatarUrl: normalized.participant.avatarUrl,
           snippet: this.snippet(newest.text),
-          status: DbStatus.unread,
-          unreadCount: inboundCount,
+          status: answered ? DbStatus.replied : DbStatus.unread,
+          unreadCount: answered ? 0 : inboundCount,
           lastActivityAt: newest.createdAt,
           items: {
             create: normalized.items.map((item) => this.toItemCreate(item)),
@@ -483,25 +486,6 @@ export class InboxService {
       },
       data: { status: DbStatus.unread, snoozedUntil: null },
     });
-  }
-
-  /** The channels a platform's API can surface, driving what we poll for. */
-  private channelsFor(platform: InboxPlatform): InboxChannel[] {
-    const caps = INBOX_PLATFORM_CATALOGUE[platform].inbox;
-    const channels: InboxChannel[] = [];
-    if (caps.messages) {
-      channels.push('message');
-    }
-    if (caps.comments) {
-      channels.push('comment');
-    }
-    if (caps.mentions) {
-      channels.push('mention');
-    }
-    if (platform === 'facebook' && caps.comments) {
-      channels.push('review');
-    }
-    return channels;
   }
 
   /** Build the Prisma filter from the query, defaulting to the active statuses. */

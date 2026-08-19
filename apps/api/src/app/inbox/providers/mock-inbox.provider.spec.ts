@@ -1,4 +1,8 @@
-import type { InboxChannel, InboxPlatform } from '@org/shared';
+import {
+  inboxChannelsFor,
+  type InboxChannel,
+  type InboxPlatform,
+} from '@org/shared';
 import { MockInboxProvider } from './mock-inbox.provider';
 import type { InboxReplyContext } from './inbox-provider';
 
@@ -17,44 +21,75 @@ describe('MockInboxProvider', () => {
 
   describe('fetch capability gating', () => {
     // Each platform's API only surfaces certain channels; the mock must mirror
-    // PLATFORM_CATALOGUE so it never fabricates activity a real API can't return.
-    it.each<{
-      platform: InboxPlatform;
-      channel: InboxChannel;
-      expected: number;
-    }>([
-      { platform: 'facebook', channel: 'message', expected: 2 },
-      { platform: 'facebook', channel: 'comment', expected: 2 },
-      { platform: 'facebook', channel: 'mention', expected: 1 },
-      { platform: 'facebook', channel: 'review', expected: 1 },
-      { platform: 'instagram', channel: 'message', expected: 2 },
-      { platform: 'instagram', channel: 'review', expected: 0 },
-      { platform: 'x', channel: 'mention', expected: 1 },
-      { platform: 'x', channel: 'message', expected: 0 },
-      { platform: 'tiktok', channel: 'comment', expected: 2 },
-      { platform: 'tiktok', channel: 'mention', expected: 0 },
-      { platform: 'linkedin', channel: 'comment', expected: 0 },
-      { platform: 'linkedin', channel: 'message', expected: 0 },
+    // the catalogue so it never fabricates activity a real API can't return.
+    // Asserted against `inboxChannelsFor` rather than hard-coded counts so
+    // growing the seed set can't silently invalidate the gate.
+    it.each<{ platform: InboxPlatform; channel: InboxChannel; seeds: boolean }>([
+      { platform: 'facebook', channel: 'message', seeds: true },
+      { platform: 'facebook', channel: 'comment', seeds: true },
+      { platform: 'facebook', channel: 'mention', seeds: true },
+      { platform: 'facebook', channel: 'review', seeds: true },
+      { platform: 'instagram', channel: 'message', seeds: true },
+      { platform: 'instagram', channel: 'review', seeds: false },
+      { platform: 'x', channel: 'mention', seeds: true },
+      { platform: 'x', channel: 'message', seeds: false },
+      { platform: 'tiktok', channel: 'comment', seeds: true },
+      { platform: 'tiktok', channel: 'mention', seeds: false },
+      { platform: 'linkedin', channel: 'comment', seeds: false },
+      { platform: 'linkedin', channel: 'message', seeds: false },
       // WhatsApp is a messaging-only inbox: DMs seed, comments/mentions never do.
-      { platform: 'whatsapp', channel: 'message', expected: 2 },
-      { platform: 'whatsapp', channel: 'comment', expected: 0 },
-      { platform: 'whatsapp', channel: 'mention', expected: 0 },
+      { platform: 'whatsapp', channel: 'message', seeds: true },
+      { platform: 'whatsapp', channel: 'comment', seeds: false },
+      { platform: 'whatsapp', channel: 'mention', seeds: false },
     ])(
-      '$platform/$channel seeds $expected conversation(s)',
-      async ({ platform, channel, expected }) => {
+      '$platform/$channel seeds conversations: $seeds',
+      async ({ platform, channel, seeds }) => {
+        // The table doubles as a check that the catalogue itself hasn't drifted.
+        expect(inboxChannelsFor(platform).includes(channel)).toBe(seeds);
+
         const provider = new MockInboxProvider(platform);
         const result = await provider.fetch(baseFetch(platform, channel));
-        expect(result.conversations).toHaveLength(expected);
+        expect(result.conversations.length > 0).toBe(seeds);
         // Every seeded conversation must actually be on the requested channel.
         for (const convo of result.conversations) {
           expect(convo.channel).toBe(channel);
           expect(convo.items.length).toBeGreaterThan(0);
-          expect(
-            convo.items.every((item) => item.direction === 'inbound'),
-          ).toBe(true);
+          expect(convo.items.every((item) => item.channel === channel)).toBe(
+            true,
+          );
         }
       },
     );
+  });
+
+  it('attributes each item to the participant or to us, per direction', async () => {
+    const provider = new MockInboxProvider('facebook');
+    const result = await provider.fetch(baseFetch('facebook', 'message'));
+    for (const convo of result.conversations) {
+      for (const item of convo.items) {
+        expect(item.author.name).toBe(
+          item.direction === 'inbound' ? convo.participant.name : 'You',
+        );
+      }
+    }
+  });
+
+  it('seeds threads we have already answered, so `replied` has data', async () => {
+    const provider = new MockInboxProvider('facebook');
+    const result = await provider.fetch(baseFetch('facebook', 'message'));
+    const answered = result.conversations.filter(
+      (c) => c.items[c.items.length - 1]?.direction === 'outbound',
+    );
+    expect(answered.length).toBeGreaterThan(0);
+  });
+
+  it('orders every thread oldest-to-newest', async () => {
+    const provider = new MockInboxProvider('facebook');
+    const result = await provider.fetch(baseFetch('facebook', 'comment'));
+    for (const convo of result.conversations) {
+      const times = convo.items.map((item) => item.createdAt.getTime());
+      expect(times).toEqual([...times].sort((a, b) => a - b));
+    }
   });
 
   it('returns a sentinel cursor on the first pull, then nothing after', async () => {

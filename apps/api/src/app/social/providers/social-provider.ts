@@ -1,4 +1,4 @@
-import type { SocialPlatform } from '@org/shared';
+import type { InboxPlatform } from '@org/shared';
 
 /** OAuth credentials returned by a provider after a code exchange. */
 export interface OAuthTokens {
@@ -47,7 +47,12 @@ export interface PublishContext {
  * and registering it — no controller/service changes required.
  */
 export interface SocialProvider {
-  readonly platform: SocialPlatform;
+  /**
+   * Widened to {@link InboxPlatform} because inbox-only channels (WhatsApp) are
+   * linked through this same OAuth loop; {@link publish} is simply never called
+   * for them.
+   */
+  readonly platform: InboxPlatform;
 
   /** Build the provider's OAuth authorize URL to redirect the browser to. */
   getAuthUrl(params: { state: string; redirectUri: string }): string;

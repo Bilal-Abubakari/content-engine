@@ -1,12 +1,18 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { PrismaService } from '@org/database';
-import type { InboxItemStatus, SocialPlatform } from '@org/shared';
+import {
+  inboxChannelsFor,
+  type InboxItemStatus,
+  type InboxPlatform,
+  type SocialPlatform,
+} from '@org/shared';
 import { randomBytes } from 'node:crypto';
 import type { LlmProvider } from '../repurpose/providers/llm-provider';
 import { TokenCryptoService } from '../social/token-crypto.service';
 import { InboxEventsService } from './inbox-events.service';
 import { InboxService } from './inbox.service';
 import { InboxProviderRegistry } from './providers/inbox-provider.registry';
+import { MockInboxProvider } from './providers/mock-inbox.provider';
 
 /** A permissive stand-in for the Prisma delegates the inbox service touches. */
 interface PrismaMock {
@@ -42,6 +48,23 @@ function makePrismaMock(): PrismaMock {
     },
     userSettings: { findUnique: jest.fn().mockResolvedValue(null) },
   };
+}
+
+/** How many threads the mock provider seeds across a platform's channels. */
+async function seededThreadCount(platform: InboxPlatform): Promise<number> {
+  const provider = new MockInboxProvider(platform);
+  let total = 0;
+  for (const channel of inboxChannelsFor(platform)) {
+    const { conversations } = await provider.fetch({
+      platform,
+      channel,
+      tokens: { accessToken: 'token' },
+      metadata: null,
+      cursor: null,
+    });
+    total += conversations.length;
+  }
+  return total;
 }
 
 describe('InboxService', () => {
@@ -339,14 +362,18 @@ describe('InboxService', () => {
   });
 
   describe('syncConnection', () => {
-    it.each<{ platform: string; expected: number; breakdown: string }>([
-      // Facebook surfaces message(2) + comment(2) + mention(1) + review(1) = 6.
-      { platform: 'facebook', expected: 6, breakdown: 'message+comment+mention+review' },
-      // WhatsApp is messaging-only, so just the two seeded DM threads land.
-      { platform: 'whatsapp', expected: 2, breakdown: 'message-only' },
+    it.each<{ platform: InboxPlatform; breakdown: string }>([
+      { platform: 'facebook', breakdown: 'message+comment+mention+review' },
+      // WhatsApp is messaging-only, so only DM threads land.
+      { platform: 'whatsapp', breakdown: 'message-only' },
     ])(
       'ingests the $breakdown seeded threads for $platform and advances the cursor',
-      async ({ platform, expected }) => {
+      async ({ platform }) => {
+        // Take the expected count from the provider itself rather than a magic
+        // number, so growing the seed set can't make this test lie.
+        const expected = await seededThreadCount(platform);
+        expect(expected).toBeGreaterThan(0);
+
         // New threads for every channel: conversation.findUnique returns null for
         // the dedupe lookup (by connectionId+externalId) and a row for emitChange
         // (by id).
@@ -367,6 +394,35 @@ describe('InboxService', () => {
         expect(prisma.syncCursor.upsert).toHaveBeenCalled();
       },
     );
+
+    it('imports an already-answered thread as replied rather than unread', async () => {
+      prisma.conversation.findUnique.mockImplementation(
+        async ({ where }: { where: Record<string, unknown> }) =>
+          'connectionId_externalId' in where ? null : convRow(),
+      );
+      prisma.conversation.create.mockResolvedValue(convRow({ id: 'created' }));
+
+      await service.syncConnection(
+        connRow({ platform: 'facebook' }) as unknown as Parameters<
+          InboxService['syncConnection']
+        >[0],
+      );
+
+      const created = prisma.conversation.create.mock.calls.map(
+        ([args]: [{ data: { status: string; unreadCount: number } }]) =>
+          args.data,
+      );
+      // A thread whose last word is ours needs no answer, so it must not land
+      // in the unread pile; everything else still does.
+      const replied = created.filter((data) => data.status === 'replied');
+      expect(replied.length).toBeGreaterThan(0);
+      expect(replied.every((data) => data.unreadCount === 0)).toBe(true);
+      expect(
+        created.some(
+          (data) => data.status === 'unread' && data.unreadCount > 0,
+        ),
+      ).toBe(true);
+    });
 
     it('skips a connection on an unknown platform without touching the db', async () => {
       const changed = await service.syncConnection(
