@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { AccountCard } from '@/components/settings/account-card';
 import { SettingsForm } from '@/components/settings/settings-form';
 import { authOptions } from '@/lib/auth';
 import { fetchUserSettings } from '@/lib/settings-server';
@@ -30,6 +31,10 @@ export default async function SettingsPage() {
       <div className="glass mt-6 p-4 sm:mt-8 sm:p-8">
         <SettingsForm initial={settings} mode="settings" />
       </div>
+      <AccountCard
+        name={session.user.name ?? null}
+        email={session.user.email ?? null}
+      />
     </main>
   );
 }
